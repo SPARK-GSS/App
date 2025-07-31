@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:gss/main.dart';
+import 'package:gss/pages/no_google_sign_up.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -13,73 +14,223 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                InkWell(
-                  onTap: (){
-                    signInWithGoogle(context);  //실제로 tap하면 로그인되도록 
-                  },
-                  child: Card(
-                    margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(7)),
-                      elevation: 2,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset('assets/google.jpg'),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          const Text("Sign in with google account",
-                          style: TextStyle(color: Colors.grey, fontSize: 17))
-                        ],
-                      ),
-                    
-                  ),
-                )
-              ],)
-          )
-        ],))
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('GSS'),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: 'Log in', icon: Icon(Icons.login)),
+              Tab(text: 'Sign up', icon: Icon(Icons.new_label)),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            SizedBox.expand(child: LogIn()),
+            SizedBox.expand(child: SignUp()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LogIn extends StatefulWidget {
+  const LogIn({super.key});
+
+  @override
+  State<LogIn> createState() => _LogInState();
+}
+
+class _LogInState extends State<LogIn> {
+
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  bool loginTF = false;
+Future<String?> signIn(String email, String pw) async {
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: pw,
+    );
+    return null; 
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'channel-error') {
+      return "모든 필드를 입력해주세요.";
+    }
+    else if(e.code == 'invalid-email'){
+      return "이메일의 형식을 지켜주세요.";
+    } else if (e.code == 'invalid-email') {
+      return "이메일에 해당하는 계정이 존재하지 않습니다";
+    } else {
+      return "비미런호가 일치하지 않습니다.";
+    }
+  } catch (e) {
+    return "Unknown error occurred.";
+  }
+}
+
+  @override
+  Widget build(BuildContext context) {
+    return Builder(
+      builder: (ctx) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            TextField(
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(labelText: '이메일'),
+            ),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: '비밀번호'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final errMsg = await signIn(emailController.text, passwordController.text);
+
+                if (errMsg == null) {
+                  // 로그인 성공
+                  if (!mounted) return;
+                  Navigator.pushReplacement(
+                    ctx,
+                    MaterialPageRoute(builder: (context) => const MyApp()),
+                  );
+                } else {
+                  // 로그인 실패
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(content: Text(errMsg)),
+                  );
+                }
+              },
+              child: const Text("Log In!"),
+            )
+          ],
+        );
+      }
     );
   }
 }
 
 
+class SignUp extends StatelessWidget {
+  const SignUp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EmailSignUpPage(),
+                    ),
+                  ); //실제로 tap하면 로그인되도록
+                },
+                child: Card(
+                  margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  elevation: 2,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      //Image.asset('assets/google.jpg'),
+                      const SizedBox(width: 10),
+                      const Text(
+                        "Sign in without google",
+                        style: TextStyle(color: Colors.grey, fontSize: 17),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  signInWithGoogle(context); //실제로 tap하면 로그인되도록
+                },
+                child: Card(
+                  margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  elevation: 2,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        child: Image.asset('assets/google.jpg'),
+                        height: 50,
+                        width: 50,
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        "Sign in with google account",
+                        style: TextStyle(color: Colors.grey, fontSize: 17),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 void signInWithGoogle(BuildContext context) async {
   final GoogleSignIn signIn = GoogleSignIn.instance;
   await signIn.initialize(
-    serverClientId: '1029552906373-3vn65d5rrivk02dpiv5c4itq1pnpgp31.apps.googleusercontent.com'
+    serverClientId:
+        '1029552906373-3vn65d5rrivk02dpiv5c4itq1pnpgp31.apps.googleusercontent.com',
   );
   // Trigger the authentication flow
   final GoogleSignInAccount googleUser = await signIn.authenticate();
-  if(googleUser == null){
-    throw FirebaseAuthException(code: "Signin aborted by user", message: 'Signin aborted by user');
+  if (googleUser == null) {
+    throw FirebaseAuthException(
+      code: "Signin aborted by user",
+      message: 'Signin aborted by user',
+    );
   }
 
   final idToken = googleUser.authentication.idToken;
   final authClient = googleUser.authorizationClient;
 
-  GoogleSignInClientAuthorization? auth = await authClient.authorizationForScopes(['email', 'profile']);
+  GoogleSignInClientAuthorization? auth = await authClient
+      .authorizationForScopes(['email', 'profile']);
 
   final accesstoken = auth?.accessToken;
 
-  final credential = GoogleAuthProvider.credential(accessToken: accesstoken, idToken: idToken);
+  final credential = GoogleAuthProvider.credential(
+    accessToken: accesstoken,
+    idToken: idToken,
+  );
 
   // Once signed in, return the UserCredential
-  return await FirebaseAuth.instance.signInWithCredential(credential).then((value) {
-    print(value.user?.email);
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => MyApp()));
-  }).onError((error, stackTrace){
-    print("error $error");
-
-  });
-
+  return await FirebaseAuth.instance
+      .signInWithCredential(credential)
+      .then((value) {
+        print(value.user?.email);
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (context) => MyApp()));
+      })
+      .onError((error, stackTrace) {
+        print("error $error");
+      });
 }

@@ -10,10 +10,10 @@ void main() async{
     await Firebase.initializeApp(
       name: "gss",
       options: DefaultFirebaseOptions.currentPlatform,
-    );
+    );  
   }
-  runApp(const MyApp());
-  //SplashScreen
+  runApp(const SplashScreen());
+  //MyApp
 }
 
 

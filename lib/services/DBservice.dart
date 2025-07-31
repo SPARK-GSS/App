@@ -13,8 +13,25 @@ class DBsvc{
         "school": "SKKU",
         "studentId": "2021311210",
         "contact": "010-9719-9725",
+        "email": "bjbj2580@g.skku.edu",
         "clubs": {
             "club1": "KUSA"
+        }
+        });
+    }
+
+    Future<void> DBsignup(String stuid, String name, String email, String major, String gender, String birth, String phone) async {
+        DatabaseReference ref = FirebaseDatabase.instance.ref("Person/$stuid");
+        await ref.set({
+        "school": "SKKU",
+        "name": name,
+        "studentId": stuid,
+        "contact": phone,
+        "email": email,
+        "major": major,
+        "gender": gender,
+        "birth": birth,
+        "clubs": {
         }
         });
     }
@@ -40,6 +57,7 @@ class DBsvc{
             // updateStarCount(data);
         });
     }
+
 
     void DBupdate(){
       final personData = {
