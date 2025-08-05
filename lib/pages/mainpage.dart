@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:gss/homepage.dart';
+import 'package:gss/services/AuthService.dart';
 import 'package:gss/services/DBservice.dart';
 
 class UserMain extends StatelessWidget {
@@ -24,6 +26,7 @@ class ClubPage extends StatefulWidget {
 
 class _ClubPageState extends State<ClubPage> {
   Future<List<String>>? _clubFuture;
+
 
   @override
   void initState() {
@@ -83,7 +86,13 @@ class _ClubPageState extends State<ClubPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('내 동아리')),
+      appBar: AppBar(title: const Text('내 동아리'),
+      actions: [
+        IconButton(onPressed: (){
+          print("plus");
+        }, icon: Icon(Icons.add))
+      ]
+      ),
       body: FutureBuilder<List<String>>(
         future: _clubFuture,
         builder: (ctx, snap) {
@@ -100,7 +109,33 @@ class _ClubPageState extends State<ClubPage> {
           return ListView.separated(
             itemCount: club.length,
             separatorBuilder: (_, __) => const Divider(),
-            itemBuilder: (_, i) => ListTile(title: Text(club[i])),
+            itemBuilder: (_, i) => ListTile(
+              onTap: (){print("${club[i]}");},
+              leading: CircleAvatar(
+                radius: 20,
+                backgroundImage: AssetImage('assets/${club[i]}.png'),
+                backgroundColor: Colors.grey[200]
+              ),
+              title: Text(club[i]),
+              trailing: FutureBuilder<String>(
+                future: user_status(club[i]),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox(
+                      width: 20,
+                      height: 20, 
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    );
+                  } else if (snapshot.hasError) {
+                    return const Icon(Icons.error, color: Colors.red);
+                    //Text("${snapshot.error}")
+                    //const Icon(Icons.error, color: Colors.red);
+                  } else {
+                    return Text(snapshot.data ?? '');
+                  }
+                },
+              ),
+            )
           );
         },
       ),

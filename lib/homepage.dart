@@ -1,7 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:gss/pages/mainpage.dart';
 import 'package:gss/pages/mypage.dart';
 import 'package:gss/pages/search.dart';
+import 'package:gss/services/AuthService.dart';
+
+
 
 class homepage extends StatefulWidget {
   const homepage({super.key});
@@ -12,6 +17,7 @@ class homepage extends StatefulWidget {
 
 class _homepageState extends State<homepage> {
   int _selectedIndex = 0;
+  
 
   void _navigateBottomBar(int index) {
     setState(() {
@@ -41,8 +47,19 @@ class _homepageState extends State<homepage> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             UserAccountsDrawerHeader(
-              accountName: Text('JBJ'),
-              accountEmail: Text('bjbj2580@g.skku.edu'),
+              accountName: FutureBuilder<String>(
+              future: user_name(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Text('로딩 중...');
+                } else if (snapshot.hasError) {
+                  return Text('에러 발생');
+                } else {
+                  return Text(snapshot.data ?? '이름 없음');
+                }
+              },
+            ),
+              accountEmail: Text(user_email()!),
               currentAccountPicture: CircleAvatar(
                 backgroundImage: AssetImage('assets/google.jpg'),
                 backgroundColor: Colors.white,

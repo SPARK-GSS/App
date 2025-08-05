@@ -18,20 +18,39 @@ class _LoginState extends State<Login> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('GSS'),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: 'Log in', icon: Icon(Icons.login)),
-              Tab(text: 'Sign up', icon: Icon(Icons.new_label)),
-            ],
-          ),
+          //title: Center(child: Text('GSS')),
+          // bottom: TabBar(
+          //   tabs: [
+          //     Tab(text: 'Log in', icon: Icon(Icons.login)),
+          //     Tab(text: 'Sign up', icon: Icon(Icons.new_label)),
+          //   ],
+          // ),
         ),
-        body: TabBarView(
+        body: Column(
           children: [
-            SizedBox.expand(child: LogIn()),
-            SizedBox.expand(child: SignUp()),
+            SizedBox(height: 100),
+            //Center(child: Text('GSS')),
+            Center(
+              child: Text(
+                'Welcome to GSS!',
+                style: TextStyle(
+                  fontSize: 30,
+                  color: Color.fromARGB(255, 146, 130, 172),
+                  fontFamily: "Pretendard",
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            SizedBox(height: 50),
+            LogIn(),
           ],
         ),
+        // TabBarView(
+        //   children: [
+        //     SizedBox.expand(child: LogIn()),
+        //     SizedBox.expand(child: SignUp()),
+        //   ],
+        // ),
       ),
     );
   }
@@ -45,32 +64,31 @@ class LogIn extends StatefulWidget {
 }
 
 class _LogInState extends State<LogIn> {
-
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool loginTF = false;
-Future<String?> signIn(String email, String pw) async {
-  try {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: email,
-      password: pw,
-    );
-    return null; 
-  } on FirebaseAuthException catch (e) {
-    if (e.code == 'channel-error') {
-      return "모든 필드를 입력해주세요.";
+  Future<String?> signIn(String email, String pw) async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: pw,
+      );
+      return null;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'channel-error') {
+        return "모든 필드를 입력해주세요.";
+      } else if (e.code == 'invalid-email') {
+        return "이메일의 형식을 지켜주세요.";
+      } else if (e.code == 'invalid-email') {
+        return "이메일에 해당하는 계정이 존재하지 않습니다";
+      } else {
+        print("${e.code}");
+        return "비밀번호가 일치하지 않습니다.";
+      }
+    } catch (e) {
+      return "Unknown error occurred.";
     }
-    else if(e.code == 'invalid-email'){
-      return "이메일의 형식을 지켜주세요.";
-    } else if (e.code == 'invalid-email') {
-      return "이메일에 해당하는 계정이 존재하지 않습니다";
-    } else {
-      return "비미런호가 일치하지 않습니다.";
-    }
-  } catch (e) {
-    return "Unknown error occurred.";
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -78,20 +96,54 @@ Future<String?> signIn(String email, String pw) async {
       builder: (ctx) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: '이메일'),
+            Container(
+              padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Color.fromARGB(255, 146, 130, 172),
+              ),
+              child: TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.email),
+                  labelText: 'Email',
+                  labelStyle: TextStyle(
+                    fontFamily: "Pretendard",
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
             ),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: '비밀번호'),
+            SizedBox(height: 10),
+            Container(
+              padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Color.fromARGB(255, 146, 130, 172),
+              ),
+              child: TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.password),
+                  labelText: 'Password',
+                  labelStyle: TextStyle(
+                    fontFamily: "Pretendard",
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
             ),
+            SizedBox(height: 10),
             ElevatedButton(
               onPressed: () async {
-                final errMsg = await signIn(emailController.text, passwordController.text);
+                final errMsg = await signIn(
+                  emailController.text,
+                  passwordController.text,
+                );
 
                 if (errMsg == null) {
                   // 로그인 성공
@@ -103,20 +155,133 @@ Future<String?> signIn(String email, String pw) async {
                 } else {
                   // 로그인 실패
                   if (!mounted) return;
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text(errMsg)),
-                  );
+                  ScaffoldMessenger.of(
+                    ctx,
+                  ).showSnackBar(SnackBar(content: Text(errMsg)));
                 }
               },
-              child: const Text("Log In!"),
-            )
+              child: const Text(
+                "Sign In!",
+                style: TextStyle(
+                  fontFamily: "Pretendard",
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Don't have an account?",
+                  style: TextStyle(
+                    fontFamily: "Pretendard",
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EmailSignUpPage(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    "Register Now",
+                    style: TextStyle(
+                      fontFamily: "Pretendard",
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Divider(
+                    color: Color.fromARGB(255, 146, 130, 172),
+                    thickness: 1,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    "or",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: "Pretendard",
+                      fontWeight: FontWeight.w800,
+                      color: Color.fromARGB(255, 146, 130, 172),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Divider(
+                    color: Color.fromARGB(255, 146, 130, 172),
+                    thickness: 1,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Center(
+              child: Text(
+                "Sign in with",
+                style: TextStyle(
+                  fontFamily: "Pretendard",
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: () {
+                    signInWithGoogle(context);
+                  },
+                  icon: SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: Image.asset('assets/google.jpg'),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: Image.asset('assets/apple.png'),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: Image.asset('assets/kakao.png'),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: Image.asset('assets/naver.png'),
+                  ),
+                ),
+              ],
+            ),
           ],
         );
-      }
+      },
     );
   }
 }
-
 
 class SignUp extends StatelessWidget {
   const SignUp({super.key});
