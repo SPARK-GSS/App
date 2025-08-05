@@ -13,23 +13,23 @@ class UserMy extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // TextButton(
-          //   onPressed: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(builder: (_) => const LogOutPage()),
-          //     );
-          //   },
-          //   style: TextButton.styleFrom(
-          //     foregroundColor: Colors.black,
-          //   ),
-          //   child: Text(
-          //     '로그아웃',
-          //     style: TextStyle(
-          //         fontSize: 20.0
-          //     ),
-          //   ),
-          // ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LogOutPage()),
+              );
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.black,
+            ),
+            child: Text(
+              '로그아웃',
+              style: TextStyle(
+                  fontSize: 20.0
+              ),
+            ),
+          ),
           TextButton(
             onPressed: () {
               Navigator.push(
