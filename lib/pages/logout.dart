@@ -11,11 +11,8 @@ class LogOutPage extends StatelessWidget {
       // Firebase 로그아웃
       await FirebaseAuth.instance.signOut();
 
-      // Google 로그아웃도 필요할 경우
-      // final googleSignIn = GoogleSignIn();
-      // if (await googleSignIn.isSignedIn()) {
-      //   await googleSignIn.signOut();
-      // }
+      // Google 로그아웃
+      await GoogleSignIn.instance.signOut();
 
       // 로그아웃 후 로그인 화면으로 이동 (스택 초기화)
       if (context.mounted) {
