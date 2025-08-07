@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:gss/main.dart';
 import 'package:gss/pages/no_google_sign_up.dart';
+import 'package:gss/services/AuthService.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -99,10 +100,11 @@ class _LogInState extends State<LogIn> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
+              margin: EdgeInsets.fromLTRB(15, 0, 15, 0),
               padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: Color.fromARGB(255, 146, 130, 172),
+                color: Color.fromARGB(255, 169, 150, 198),
               ),
               child: TextField(
                 controller: emailController,
@@ -119,10 +121,11 @@ class _LogInState extends State<LogIn> {
             ),
             SizedBox(height: 10),
             Container(
+              margin: EdgeInsets.fromLTRB(15, 0, 15, 0),
               padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: Color.fromARGB(255, 146, 130, 172),
+                color: Color.fromARGB(255, 169, 150, 198),
               ),
               child: TextField(
                 controller: passwordController,
@@ -389,11 +392,19 @@ void signInWithGoogle(BuildContext context) async {
   // Once signed in, return the UserCredential
   return await FirebaseAuth.instance
       .signInWithCredential(credential)
-      .then((value) {
+      .then((value) async {
         print(value.user?.email);
+        String name = await user_name();
+        if(name=="nth"){
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => GoogleSignUpPage()),
+          );
+        }
+        else{
         Navigator.of(
           context,
         ).pushReplacement(MaterialPageRoute(builder: (context) => MyApp()));
+        }
       })
       .onError((error, stackTrace) {
         print("error $error");

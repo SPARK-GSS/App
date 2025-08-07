@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:gss/pages/login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:gss/services/AuthService.dart';
 
 class DeleteAccountPage extends StatefulWidget {
   const DeleteAccountPage({super.key});
@@ -91,7 +92,7 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
       }
 
       // ✅ Realtime Database에서 사용자 데이터 삭제
-      await _database.ref("users/$uid").remove();
+      await _database.ref("Person/$user_stuid()").remove();
 
       // ✅ Firebase Authentication 계정 삭제
       await user.delete();

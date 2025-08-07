@@ -18,7 +18,8 @@ Future<String> user_name() async {
         .equalTo(userEmail)
         .get();
 
-  if (!userSnap.exists) throw Exception('사용자 정보 없음');
+  if (!userSnap.exists) return "nth"; 
+  //throw Exception('사용자 정보 없음');
 
   final userData = (userSnap.value as Map).entries.first;
   final studentId = userData.key; 
