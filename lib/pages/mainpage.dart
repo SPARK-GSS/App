@@ -10,12 +10,9 @@ class UserMain extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child:  ClubPage(),
-    );
+    return Center(child: ClubPage());
   }
 }
-
 
 class ClubPage extends StatefulWidget {
   const ClubPage({super.key});
@@ -26,7 +23,6 @@ class ClubPage extends StatefulWidget {
 
 class _ClubPageState extends State<ClubPage> {
   Future<List<String>>? _clubFuture;
-
 
   @override
   void initState() {
@@ -52,8 +48,7 @@ class _ClubPageState extends State<ClubPage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         print(user.email);
-      }
-      else{
+      } else {
         print("no!!!!!!");
         return [];
       }
@@ -66,7 +61,7 @@ class _ClubPageState extends State<ClubPage> {
       if (!userSnap.exists) throw Exception('사용자 정보 없음');
 
       final userData = (userSnap.value as Map).entries.first;
-      final studentId = userData.key; 
+      final studentId = userData.key;
       print(studentId);
       // 동아리 목록 읽기
       final clubSnap = await FirebaseDatabase.instance
@@ -86,12 +81,16 @@ class _ClubPageState extends State<ClubPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('내 동아리'),
-      actions: [
-        IconButton(onPressed: (){
-          print("plus");
-        }, icon: Icon(Icons.add))
-      ]
+      appBar: AppBar(
+        title: const Text('내 동아리'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              print("plus");
+            },
+            icon: Icon(Icons.add),
+          ),
+        ],
       ),
       body: FutureBuilder<List<String>>(
         future: _clubFuture,
@@ -110,11 +109,16 @@ class _ClubPageState extends State<ClubPage> {
             itemCount: club.length,
             separatorBuilder: (_, __) => const Divider(),
             itemBuilder: (_, i) => ListTile(
-              onTap: (){print("${club[i]}");},
+              onTap: () {
+                print("${club[i]}");
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => Club()),
+                );
+              },
               leading: CircleAvatar(
                 radius: 20,
                 backgroundImage: AssetImage('assets/${club[i]}.png'),
-                backgroundColor: Colors.grey[200]
+                backgroundColor: Colors.grey[200],
               ),
               title: Text(club[i]),
               trailing: FutureBuilder<String>(
@@ -123,7 +127,7 @@ class _ClubPageState extends State<ClubPage> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const SizedBox(
                       width: 20,
-                      height: 20, 
+                      height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     );
                   } else if (snapshot.hasError) {
@@ -135,9 +139,48 @@ class _ClubPageState extends State<ClubPage> {
                   }
                 },
               ),
-            )
+            ),
           );
         },
+      ),
+    );
+  }
+}
+
+
+class Club extends StatefulWidget {
+  const Club({super.key});
+
+  @override
+  State<Club> createState() => _ClubState();
+}
+
+class _ClubState extends State<Club> {
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 4, // 탭 개수
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('상단 메뉴 예시'),
+          bottom: const TabBar(
+            isScrollable: true,
+            tabs: [
+              Tab(text: '모임'),
+              Tab(text: '정산'),
+              Tab(text: '공지'),
+              Tab(text: '캘린더'),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            Center(child: Text('모임 페이지')),
+            Center(child: Text('정산 페이지')),
+            Center(child: Text('공지 페이지')),
+            Center(child: Text('캘린더 페이지')),
+          ],
+        ),
       ),
     );
   }
