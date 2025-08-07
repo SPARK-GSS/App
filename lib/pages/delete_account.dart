@@ -92,7 +92,8 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
       }
 
       // ✅ Realtime Database에서 사용자 데이터 삭제
-      await _database.ref("Person/$user_stuid()").remove();
+      final stuid = await user_stuid(); // AuthService에서 정의한 사용자 학번 추출 함수
+      await _database.ref("Person/$stuid").remove();
 
       // ✅ Firebase Authentication 계정 삭제
       await user.delete();
