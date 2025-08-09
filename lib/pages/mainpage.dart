@@ -2,8 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:gss/homepage.dart';
+import 'package:gss/mainpages/calendar.dart';
+import 'package:gss/mainpages/event.dart';
 import 'package:gss/services/AuthService.dart';
 import 'package:gss/services/DBservice.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'dart:collection';
 
 class UserMain extends StatelessWidget {
   const UserMain({super.key});
@@ -111,9 +115,9 @@ class _ClubPageState extends State<ClubPage> {
             itemBuilder: (_, i) => ListTile(
               onTap: () {
                 print("${club[i]}");
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => Club()),
-                );
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (context) => Club(clubName: '${club[i]}')));
               },
               leading: CircleAvatar(
                 radius: 20,
@@ -147,15 +151,16 @@ class _ClubPageState extends State<ClubPage> {
   }
 }
 
-
 class Club extends StatefulWidget {
-  const Club({super.key});
+  final String clubName; // club 이름 저장
 
+  const Club({super.key, required this.clubName});
   @override
   State<Club> createState() => _ClubState();
 }
 
 class _ClubState extends State<Club> {
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -173,12 +178,12 @@ class _ClubState extends State<Club> {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
             Center(child: Text('모임 페이지')),
             Center(child: Text('정산 페이지')),
             Center(child: Text('공지 페이지')),
-            Center(child: Text('캘린더 페이지')),
+            Calendar(clubName: widget.clubName)
           ],
         ),
       ),
