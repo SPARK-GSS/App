@@ -14,6 +14,6 @@ bool _isLogin = false;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: Scaffold(body:_isLogin ? MyApp() : Login() )); 
+    return MaterialApp(home: Scaffold(backgroundColor: Colors.white, body:_isLogin ? MyApp() : Login() ));
   }
 }

@@ -27,8 +27,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
         fontFamily: "Pretendard",
+        //colorScheme: ColorScheme.fromSeed(seedColor: Colors.white)
       ),
       home: homepage(),
+
     );
   }
 }
