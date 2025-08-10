@@ -186,8 +186,6 @@ class _ClubState extends State<Club> {
             //Group(clubName: widget.clubName),
             Center(child: Text('모임 페이지')),
             Center(child: Text('정산 페이지')),
-            Center(child: Text('공지 페이지')),
-
             NoticeBoard(clubName: widget.clubName),
             Calendar(clubName: widget.clubName)
           ],
