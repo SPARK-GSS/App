@@ -179,6 +179,7 @@ class _ClubState extends State<Club> {
             Center(child: Text('정산 페이지')),
             Center(child: Text('공지 페이지')),
             Center(child: Text('캘린더 페이지')),
+            //풀리퀘스트 연습
           ],
         ),
       ),
