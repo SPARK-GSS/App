@@ -66,6 +66,16 @@ class DBsvc {
     });
   }
 
+  Future<List<String>> loadGroups(String club) async {
+    final ref = FirebaseDatabase.instance.ref("Club/$club/group/");
+    final snapshot = await ref.get();
+
+    if (!snapshot.exists) return [];
+
+    final raw = snapshot.value as Map;
+    return raw.values.map((e) => e.toString()).toList();
+  }
+
   Future<List<Event>> loadEvents(String club, String date) async {
     final ref = FirebaseDatabase.instance.ref("Club/$club/calendar/$date");
     final snapshot = await ref.get();
