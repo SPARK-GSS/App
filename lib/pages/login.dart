@@ -88,7 +88,10 @@ class _LogInState extends State<LogIn> {
         print("${e.code}");
         return "비밀번호가 일치하지 않습니다.";
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print("Error type: ${e.runtimeType}");
+      print("Error details: $e");
+      print(stackTrace);
       return "Unknown error occurred.";
     }
   }
@@ -191,7 +194,7 @@ class _LogInState extends State<LogIn> {
                 style: TextStyle(
                   fontFamily: "Pretendard",
                   fontWeight: FontWeight.w800,
-                  color: Color.fromRGBO(149, 149, 149, 1.0),
+                  color: Color.fromRGBO(119, 119, 119, 1.0),
                 ),
               ),
             ),
@@ -276,7 +279,7 @@ class _LogInState extends State<LogIn> {
                   icon: SizedBox(
                     height: 50,
                     width: 50,
-                    child: Image.asset('assets/google.jpg'),
+                    child: Image.asset('assets/google_removebg.png'),
                   ),
                 ),
                 IconButton(
