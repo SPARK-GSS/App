@@ -18,7 +18,9 @@ class _LoginState extends State<Login> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
+            backgroundColor: Colors.white
           //title: Center(child: Text('GSS')),
           // bottom: TabBar(
           //   tabs: [
@@ -36,7 +38,7 @@ class _LoginState extends State<Login> {
                 'Welcome to GSS!',
                 style: TextStyle(
                   fontSize: 30,
-                  color: Color.fromARGB(255, 146, 130, 172),
+                  color: Color.fromRGBO(0, 0, 0, 1.0),
                   fontFamily: "Pretendard",
                   fontWeight: FontWeight.w800,
                 ),
@@ -100,40 +102,54 @@ class _LogInState extends State<LogIn> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              margin: EdgeInsets.fromLTRB(15, 0, 15, 0),
+              margin: EdgeInsets.fromLTRB(25, 0, 25, 0),
               padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
               decoration: BoxDecoration(
+                border: Border.all(
+                    color: Color.fromRGBO(172, 172, 172, 1.0),
+                  width: 1.0
+                ),
                 borderRadius: BorderRadius.circular(20),
-                color: Color.fromARGB(255, 169, 150, 198),
+                color: Color.fromRGBO(255, 255, 255, 1.0),
               ),
               child: TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
-                  icon: Icon(Icons.email),
+                  border: InputBorder.none,
+                  icon: Icon(Icons.email, color: Color.fromRGBO(
+                      172, 172, 172, 1.0)),
                   labelText: 'Email',
                   labelStyle: TextStyle(
                     fontFamily: "Pretendard",
                     fontWeight: FontWeight.w800,
+                    color: Color.fromRGBO(172, 172, 172, 1.0),
                   ),
                 ),
               ),
             ),
             SizedBox(height: 10),
             Container(
-              margin: EdgeInsets.fromLTRB(15, 0, 15, 0),
+              margin: EdgeInsets.fromLTRB(25, 0, 25, 0),
               padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
               decoration: BoxDecoration(
+                border: Border.all(
+                    color: Color.fromRGBO(172, 172, 172, 1.0),
+                    width: 1.0
+                ),
                 borderRadius: BorderRadius.circular(20),
-                color: Color.fromARGB(255, 169, 150, 198),
+                color: Color.fromRGBO(255, 255, 255, 1.0),
               ),
               child: TextField(
                 controller: passwordController,
                 obscureText: true,
                 decoration: const InputDecoration(
-                  icon: Icon(Icons.password),
+                  border: InputBorder.none,
+                  icon: Icon(Icons.password, color: Color.fromRGBO(
+        172, 172, 172, 1.0)),
                   labelText: 'Password',
                   labelStyle: TextStyle(
+                    color: Color.fromRGBO(172, 172, 172, 1.0),
                     fontFamily: "Pretendard",
                     fontWeight: FontWeight.w800,
                   ),
@@ -142,6 +158,13 @@ class _LogInState extends State<LogIn> {
             ),
             SizedBox(height: 10),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+
+                backgroundColor: Color.fromRGBO(216, 162, 163, 1.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)
+                )
+        ),
               onPressed: () async {
                 final errMsg = await signIn(
                   emailController.text,
@@ -168,6 +191,7 @@ class _LogInState extends State<LogIn> {
                 style: TextStyle(
                   fontFamily: "Pretendard",
                   fontWeight: FontWeight.w800,
+                  color: Color.fromRGBO(149, 149, 149, 1.0),
                 ),
               ),
             ),
@@ -179,6 +203,7 @@ class _LogInState extends State<LogIn> {
                   style: TextStyle(
                     fontFamily: "Pretendard",
                     fontWeight: FontWeight.w800,
+                    color: Color.fromRGBO(119, 119, 119, 1.0)
                   ),
                 ),
                 TextButton(
@@ -195,6 +220,7 @@ class _LogInState extends State<LogIn> {
                     style: TextStyle(
                       fontFamily: "Pretendard",
                       fontWeight: FontWeight.w800,
+                      color: Color.fromRGBO(0,0,0,1.0),
                     ),
                   ),
                 ),
@@ -205,7 +231,7 @@ class _LogInState extends State<LogIn> {
               children: [
                 Expanded(
                   child: Divider(
-                    color: Color.fromARGB(255, 146, 130, 172),
+                    color: Color.fromRGBO(0,0,0,1.0),
                     thickness: 1,
                   ),
                 ),
@@ -217,13 +243,13 @@ class _LogInState extends State<LogIn> {
                       fontSize: 16,
                       fontFamily: "Pretendard",
                       fontWeight: FontWeight.w800,
-                      color: Color.fromARGB(255, 146, 130, 172),
+                      color: Color.fromRGBO(0,0,0,1.0),
                     ),
                   ),
                 ),
                 Expanded(
                   child: Divider(
-                    color: Color.fromARGB(255, 146, 130, 172),
+                    color: Color.fromRGBO(0,0,0,1.0),
                     thickness: 1,
                   ),
                 ),
@@ -340,7 +366,7 @@ class SignUp extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(
-                        child: Image.asset('assets/google.jpg'),
+                        child: Image.asset('assets/google_removebg.png'),
                         height: 50,
                         width: 50,
                       ),
