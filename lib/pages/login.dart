@@ -366,7 +366,7 @@ class SignUp extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(
-                        child: Image.asset('assets/google_removebg.png'),
+                        child: Image.asset('assets/google.jpg'),
                         height: 50,
                         width: 50,
                       ),
