@@ -29,7 +29,7 @@ class _GroupState extends State<Group> {
       body: FutureBuilder(
         future: _groupList,
         builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
+          if (snap.connectionState!= ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
