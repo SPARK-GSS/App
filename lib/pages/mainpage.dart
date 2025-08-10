@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:gss/homepage.dart';
+
+import 'package:gss/mainpages/noticeboard.dart';
 import 'package:gss/mainpages/calendar.dart';
 import 'package:gss/mainpages/event.dart';
 import 'package:gss/mainpages/group.dart';
@@ -185,6 +187,8 @@ class _ClubState extends State<Club> {
             Center(child: Text('모임 페이지')),
             Center(child: Text('정산 페이지')),
             Center(child: Text('공지 페이지')),
+
+            NoticeBoard(clubName: widget.clubName),
             Calendar(clubName: widget.clubName)
           ],
         ),
