@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:gss/services/AuthService.dart';
 
 class Notice {
   final String id;
@@ -40,8 +41,13 @@ class NoticeBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: StreamBuilder<DatabaseEvent>(
+    return FutureBuilder<bool>(
+      future: OfficerService.canManage(clubName),
+      builder: (context, snap) {
+        final canManage = snap.data ?? false;
+        return Scaffold(
+
+        body: StreamBuilder<DatabaseEvent>(
         stream: _ref.onValue,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -101,7 +107,8 @@ class NoticeBoard extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: canManage
+          ? FloatingActionButton.extended(
         onPressed: () {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => NoticeEditorPage(clubName: clubName),
@@ -109,8 +116,11 @@ class NoticeBoard extends StatelessWidget {
         },
         icon: const Icon(Icons.add),
         label: const Text('공지 작성'),
-      ),
+      )
+          : null,
     );
+  },
+  );
   }
 }
 
@@ -128,12 +138,18 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
   DatabaseReference get _ref =>
       FirebaseDatabase.instance.ref('Club/${widget.clubName}/notices');
 
+  bool _menuVisible = false;
+
   @override
   void initState() {
     super.initState();
     _notice = widget.notice;
+    _computeMenuVisible();
   }
-
+  Future<void> _computeMenuVisible() async {
+    final canManage = await OfficerService.canManage(widget.clubName);
+    if (mounted) setState(() => _menuVisible = canManage || false);
+  }
   Future<void> _deleteNotice() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -177,14 +193,11 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
   @override
   Widget build(BuildContext context) {
     final created = DateTime.fromMillisecondsSinceEpoch(_notice.createdAt);
-    final currentEmail = FirebaseAuth.instance.currentUser?.email;
-    final isAuthor = (_notice.author != null && _notice.author == currentEmail);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(_notice.title, overflow: TextOverflow.ellipsis),
         actions: [
-          if (isAuthor)
+          if (_menuVisible)
             PopupMenuButton<String>(
               onSelected: (v) {
                 if (v == 'edit') _editNotice();
