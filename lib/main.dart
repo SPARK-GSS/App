@@ -3,9 +3,11 @@ import 'package:gss/homepage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:gss/pages/splash.dart';
 import 'firebase_options.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
+  tz.initializeTimeZones();
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       name: "gss",
@@ -14,6 +16,7 @@ void main() async{
   }
   runApp(const SplashScreen());
   //MyApp
+  //SplashScreen
 }
 
 

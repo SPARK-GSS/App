@@ -7,6 +7,8 @@ import 'package:gss/mainpages/noticeboard.dart';
 import 'package:gss/mainpages/calendar.dart';
 import 'package:gss/mainpages/event.dart';
 import 'package:gss/mainpages/group.dart';
+import 'package:gss/mainpages/sync_cal.dart';
+import 'package:gss/pages/newclub.dart';
 import 'package:gss/services/AuthService.dart';
 import 'package:gss/services/DBservice.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -93,7 +95,7 @@ class _ClubPageState extends State<ClubPage> {
         actions: [
           IconButton(
             onPressed: () {
-              print("plus");
+              Navigator.of(context,).push(MaterialPageRoute(builder: (context)=> ClubCreatePage()));
             },
             icon: Icon(Icons.add),
           ),
@@ -187,7 +189,8 @@ class _ClubState extends State<Club> {
             Center(child: Text('모임 페이지')),
             Center(child: Text('정산 페이지')),
             NoticeBoard(clubName: widget.clubName),
-            Calendar(clubName: widget.clubName)
+            CalendarApp(clubName: widget.clubName)
+            //Calendar(clubName: widget.clubName)
           ],
         ),
       ),

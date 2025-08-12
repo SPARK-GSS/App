@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:gss/mainpages/event.dart';
 import 'package:gss/services/DBservice.dart';
@@ -14,6 +15,8 @@ class Calendar extends StatefulWidget {
 
 class _CalendarState extends State<Calendar> {
   @override
+  bool _isLoading = true;
+  Map<DateTime, List<String>> _events = {};
   DateTime _focusedDay = DateTime.now();
   DateTime _firstDay = DateTime.utc(2025, 08, 01);
   DateTime _lastDay = DateTime.utc(2025, 12, 31);
@@ -32,7 +35,11 @@ class _CalendarState extends State<Calendar> {
     super.initState();
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
-    _fetchAndSetEvents(_selectedDay!);
+      _fetchAllEvents(widget.clubName).then((_) {
+    setState(() {
+      _isLoading = false; // 데이터 로딩 완료 표시
+    });
+  });
   }
 
   Future<void> _fetchAndSetEvents(DateTime day) async {
@@ -47,6 +54,30 @@ class _CalendarState extends State<Calendar> {
 
     _selectedEvents.value = loadedEvents;
   }
+
+Future<void> _fetchAllEvents(String club) async {
+  final snapshot = await FirebaseDatabase.instance
+      .ref("Club/$club/Calendar")
+      .get();
+
+  if (snapshot.exists) {
+    final data = snapshot.value as Map<dynamic, dynamic>;
+
+    data.forEach((dateStr, value) {
+      DateTime date = DateTime.parse(dateStr);
+      List<Event> eventList = [];
+
+      if (value is List) {
+        eventList = value.map((e) => Event(e.toString())).toList();
+      } else if (value is Map) {
+        eventList = value.values.map((e) => Event(e.toString())).toList();
+      }
+
+      events[DateTime.utc(date.year, date.month, date.day)] = eventList;
+    });
+  }
+}
+
 
 
 
