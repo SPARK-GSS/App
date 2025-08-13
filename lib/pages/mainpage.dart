@@ -9,6 +9,7 @@ import 'package:gss/mainpages/event.dart';
 import 'package:gss/mainpages/group.dart';
 import 'package:gss/mainpages/sync_cal.dart';
 import 'package:gss/pages/newclub.dart';
+import 'package:gss/services/ApiService.dart';
 import 'package:gss/services/AuthService.dart';
 import 'package:gss/services/DBservice.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -37,6 +38,10 @@ class _ClubPageState extends State<ClubPage> {
   void initState() {
     super.initState();
     _clubFuture = _loadClubs();
+  }
+
+  Future _onRefresh() async {
+    await Future.delayed(Duration(milliseconds: 1000));
   }
 
   Future<List<String>> _loadClubs() async {
@@ -95,7 +100,9 @@ class _ClubPageState extends State<ClubPage> {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.of(context,).push(MaterialPageRoute(builder: (context)=> ClubCreatePage()));
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (context) => ClubCreatePage()));
             },
             icon: Icon(Icons.add),
           ),
@@ -114,39 +121,44 @@ class _ClubPageState extends State<ClubPage> {
           if (club.isEmpty) {
             return const Center(child: Text('가입된 동아리가 없습니다.'));
           }
-          return ListView.separated(
-            itemCount: club.length,
-            separatorBuilder: (_, __) => const Divider(),
-            itemBuilder: (_, i) => ListTile(
-              onTap: () {
-                print("${club[i]}");
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => Club(clubName: '${club[i]}')));
-              },
-              leading: CircleAvatar(
-                radius: 20,
-                backgroundImage: AssetImage('assets/${club[i]}.png'),
-                backgroundColor: Colors.grey[200],
-              ),
-              title: Text(club[i]),
-              trailing: FutureBuilder<String>(
-                future: user_status(club[i]),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    );
-                  } else if (snapshot.hasError) {
-                    return const Icon(Icons.error, color: Colors.red);
-                    //Text("${snapshot.error}")
-                    //const Icon(Icons.error, color: Colors.red);
-                  } else {
-                    return Text(snapshot.data ?? '');
-                  }
+          return RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: ListView.separated(
+              itemCount: club.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (_, i) => ListTile(
+                onTap: () {
+                  print("${club[i]}");
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => Club(clubName: '${club[i]}'),
+                    ),
+                  );
                 },
+                leading: CircleAvatar(
+                  radius: 20,
+                  backgroundImage: AssetImage('assets/${club[i]}.png'),
+                  backgroundColor: Colors.grey[200],
+                ),
+                title: Text(club[i]),
+                trailing: FutureBuilder<String>(
+                  future: user_status(club[i]),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    } else if (snapshot.hasError) {
+                      return const Icon(Icons.error, color: Colors.red);
+                      //Text("${snapshot.error}")
+                      //const Icon(Icons.error, color: Colors.red);
+                    } else {
+                      return Text(snapshot.data ?? '');
+                    }
+                  },
+                ),
               ),
             ),
           );
@@ -165,12 +177,18 @@ class Club extends StatefulWidget {
 }
 
 class _ClubState extends State<Club> {
-
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 4, // 탭 개수
       child: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (context) => ApiService()));
+          },
+        ),
         appBar: AppBar(
           title: const Text('상단 메뉴 예시'),
           bottom: const TabBar(
@@ -189,7 +207,7 @@ class _ClubState extends State<Club> {
             Center(child: Text('모임 페이지')),
             Center(child: Text('정산 페이지')),
             NoticeBoard(clubName: widget.clubName),
-            CalendarApp(clubName: widget.clubName)
+            CalendarApp(clubName: widget.clubName),
             //Calendar(clubName: widget.clubName)
           ],
         ),
