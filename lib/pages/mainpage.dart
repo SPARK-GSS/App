@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:gss/homepage.dart';
 
 import 'package:gss/mainpages/noticeboard.dart';
+import 'package:gss/mainpages/memberlist.dart';
 import 'package:gss/mainpages/calendar.dart';
 import 'package:gss/mainpages/event.dart';
 import 'package:gss/mainpages/group.dart';
@@ -121,19 +122,39 @@ class _ClubPageState extends State<ClubPage> {
           if (club.isEmpty) {
             return const Center(child: Text('가입된 동아리가 없습니다.'));
           }
-          return RefreshIndicator(
-            onRefresh: _onRefresh,
-            child: ListView.separated(
-              itemCount: club.length,
-              separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (_, i) => ListTile(
-                onTap: () {
-                  print("${club[i]}");
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => Club(clubName: '${club[i]}'),
-                    ),
-                  );
+
+          return ListView.separated(
+            itemCount: club.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (_, i) => ListTile(
+              onTap: () {
+                print("${club[i]}");
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (context) => Club(clubName: '${club[i]}')));
+              },
+              leading: CircleAvatar(
+                radius: 20,
+                backgroundImage: AssetImage('assets/${club[i]}.png'),
+                backgroundColor: Colors.grey[200],
+              ),
+              title: Text(club[i]),
+              trailing: FutureBuilder<String>(
+                future: OfficerService.printingRole(club[i]),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    );
+                  } else if (snapshot.hasError) {
+                    //return const Icon(Icons.error, color: Colors.red);
+                    return Text("${snapshot.error}");
+                    return const Icon(Icons.error, color: Colors.red);
+                  } else {
+                    return Text(snapshot.data ?? '');
+                  }
                 },
                 leading: CircleAvatar(
                   radius: 20,
@@ -170,48 +191,66 @@ class _ClubPageState extends State<ClubPage> {
 
 class Club extends StatefulWidget {
   final String clubName; // club 이름 저장
-
   const Club({super.key, required this.clubName});
+
   @override
   State<Club> createState() => _ClubState();
 }
 
 class _ClubState extends State<Club> {
+  late Future<bool> _canSeeMembers;
+
+  @override
+  void initState() {
+    super.initState();
+    // MemberList.dart 안의 ListAuth 사용 (이미 그 파일을 import 하고 있으니 OK)
+    _canSeeMembers = OfficerService.canManage(widget.clubName);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4, // 탭 개수
-      child: Scaffold(
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (context) => ApiService()));
-          },
-        ),
-        appBar: AppBar(
-          title: const Text('상단 메뉴 예시'),
-          bottom: const TabBar(
-            isScrollable: true,
-            tabs: [
-              Tab(text: '모임'),
-              Tab(text: '정산'),
-              Tab(text: '공지'),
-              Tab(text: '캘린더'),
-            ],
+    return FutureBuilder<bool>(
+      future: _canSeeMembers,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final showMembers = snap.data ?? false;
+
+        // 동적으로 탭/뷰 구성
+        final tabs = <Tab>[
+          const Tab(text: '모임'),
+          const Tab(text: '정산'),
+          const Tab(text: '공지'),
+          const Tab(text: '캘린더'),
+          if (showMembers) const Tab(text: '부원'),
+        ];
+
+        final views = <Widget>[
+          const Center(child: Text('모임 페이지')),
+          const Center(child: Text('정산 페이지')),
+          NoticeBoard(clubName: widget.clubName),
+          CalendarApp(clubName: widget.clubName),
+          if (showMembers) MemberList(clubName: widget.clubName),
+        ];
+
+        return DefaultTabController(
+          length: tabs.length,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(widget.clubName),
+              bottom: TabBar(
+                isScrollable: true,
+                tabs: tabs,
+              ),
+            ),
+            body: TabBarView(children: views),
           ),
-        ),
-        body: TabBarView(
-          children: [
-            //Group(clubName: widget.clubName),
-            Center(child: Text('모임 페이지')),
-            Center(child: Text('정산 페이지')),
-            NoticeBoard(clubName: widget.clubName),
-            CalendarApp(clubName: widget.clubName),
-            //Calendar(clubName: widget.clubName)
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }

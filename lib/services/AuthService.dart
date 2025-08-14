@@ -115,4 +115,11 @@ class OfficerService {
     final r = await roleOf(clubName);
     return r == 'president' || r == 'vice' || r == 'manager';
   }
+  static Future<String> printingRole(String clubName) async {
+    final r = await roleOf(clubName);
+    if(r == 'president') return "회장";
+    else if(r == 'vice') return "부회장";
+    else if(r == 'manager') return "운영진";
+    else return "부원";
+  }
 }
