@@ -9,16 +9,15 @@ class ListAuth {
   static DatabaseReference officerRef(String club) =>
       FirebaseDatabase.instance.ref('Club/$club/officer');
 
-  /// 현재 로그인 사용자의 학번
   static Future<String?> currentStudentId() async {
     try {
-      return await user_stuid(); // AuthService에 이미 구현
+      return await user_stuid(); // AuthService에 구현되어 있다고 가정
     } catch (_) {
       return null;
     }
   }
 
-  /// 특정 학번의 역할 조회: 'president' | 'vice' | 'manager' | 'none'
+  /// 'president' | 'vice' | 'manager' | 'none'
   static Future<String> roleOf(String club, String sid) async {
     final snap = await officerRef(club).get();
     if (!snap.exists) return 'none';
@@ -30,7 +29,6 @@ class ListAuth {
     final vice = data['vice']?.toString();
     if (vice == sid) return 'vice';
 
-    // managers 맵 지원
     if (data['managers'] is Map) {
       final managers = Map<dynamic, dynamic>.from(data['managers']);
       if (managers.containsKey(sid) && managers[sid] == true) return 'manager';
@@ -45,7 +43,6 @@ class ListAuth {
     return 'none';
   }
 
-  /// 내 역할
   static Future<String> roleOfMe(String club) async {
     final sid = await currentStudentId();
     if (sid == null) return 'none';
@@ -62,8 +59,8 @@ class ListAuth {
     final ref = officerRef(club);
     final updates = <String, dynamic>{
       'president': targetSid,
-      'managers/$mySid': true,
-      'managers/$targetSid': null, // 타겟이 기존 managers였다면 제거
+      'managers/$mySid': true, // 본인은 운영진으로
+      'managers/$targetSid': null, // 타겟이 managers였다면 제거
     };
     await ref.update(updates);
   }
@@ -99,11 +96,20 @@ class ListAuth {
   }
 }
 
+class _MenuAction {
+  final String key; // 'appoint' | 'revoke' | 'delegate_pres' | 'delegate_vice'
+  final String label;
+  final IconData icon;
+
+  _MenuAction(this.key, this.label, this.icon);
+}
+
 /// =======================
 /// MemberList 페이지
 /// =======================
 class MemberList extends StatefulWidget {
   final String clubName;
+
   const MemberList({super.key, required this.clubName});
 
   @override
@@ -113,11 +119,14 @@ class MemberList extends StatefulWidget {
 class _MemberListState extends State<MemberList> {
   bool _loading = true;
   String _myRole = 'none';
+  String? _mySid; // 내 학번
 
   // memberId list (studentIds)
   List<String> _memberSids = [];
+
   // sid -> person data
   final Map<String, Map<String, dynamic>> _personBySid = {};
+
   // sid -> role
   final Map<String, String> _roleBySid = {};
 
@@ -129,7 +138,7 @@ class _MemberListState extends State<MemberList> {
 
   Future<void> _initLoad() async {
     try {
-      // 내 역할만 확인해서 버튼 노출 제어에 사용
+      _mySid = await ListAuth.currentStudentId();
       _myRole = await ListAuth.roleOfMe(widget.clubName);
 
       // 멤버 목록: Club/{club}/members/{sid}: true
@@ -149,8 +158,9 @@ class _MemberListState extends State<MemberList> {
       for (final sid in sids) {
         final pSnap = await FirebaseDatabase.instance.ref('Person/$sid').get();
         if (pSnap.exists) {
-          _personBySid[sid] =
-          Map<String, dynamic>.from(pSnap.value as Map<dynamic, dynamic>);
+          _personBySid[sid] = Map<String, dynamic>.from(
+            pSnap.value as Map<dynamic, dynamic>,
+          );
         } else {
           _personBySid[sid] = {
             'name': '(미등록)',
@@ -184,6 +194,20 @@ class _MemberListState extends State<MemberList> {
     }
   }
 
+  Color _roleColor(String role) {
+    switch (role) {
+      case 'president':
+        return Colors.orange.shade100;
+      case 'vice':
+        return Colors.blue.shade100;
+      case 'manager':
+        return Colors.green.shade100;
+      default:
+        return Colors.grey.shade200;
+    }
+  }
+
+  // ===== 액션 구현 =====
   Future<void> _appointManager(String sid) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -191,8 +215,14 @@ class _MemberListState extends State<MemberList> {
         title: const Text('운영진 임명'),
         content: Text('학번 $sid 을(를) 운영진으로 임명하시겠습니까?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('확인')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('확인'),
+          ),
         ],
       ),
     );
@@ -204,8 +234,11 @@ class _MemberListState extends State<MemberList> {
       value: true,
     );
     _roleBySid[sid] = 'manager';
-    if (mounted) setState(() {});
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('운영진으로 임명되었습니다.')));
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('운영진으로 임명되었습니다.')));
   }
 
   Future<void> _revokeManager(String sid) async {
@@ -215,8 +248,14 @@ class _MemberListState extends State<MemberList> {
         title: const Text('운영진 해임'),
         content: Text('학번 $sid 의 운영진 권한을 해임하시겠습니까?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('확인')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('확인'),
+          ),
         ],
       ),
     );
@@ -228,161 +267,208 @@ class _MemberListState extends State<MemberList> {
       value: false,
     );
     _roleBySid[sid] = 'none';
-    if (mounted) setState(() {});
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('운영진에서 해임되었습니다.')));
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('운영진에서 해임되었습니다.')));
   }
 
   Future<void> _delegatePresident(String sid) async {
-    final mySid = await ListAuth.currentStudentId();
-    if (mySid == sid) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('본인에게는 위임할 수 없습니다.')));
+    if (_mySid == sid) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('본인에게는 위임할 수 없습니다.')));
       return;
     }
-
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('회장 위임'),
         content: Text('학번 $sid 에게 회장 직책을 위임하시겠습니까?\n(현재 사용자는 운영진으로 변경됩니다)'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('확인')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('확인'),
+          ),
         ],
       ),
     );
     if (ok != true) return;
 
     await ListAuth.delegatePresident(club: widget.clubName, targetSid: sid);
-    _roleBySid.updateAll((key, value) => key == sid ? 'president' : value);
-    if (mySid != null) _roleBySid[mySid] = 'manager';
-    if (mounted) setState(() {});
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('회장 위임이 완료되었습니다.')));
+
+    // 테이블 반영
+    for (var i = 0; i < _memberSids.length; i++) {
+      final s = _memberSids[i];
+      if (s == sid) {
+        _roleBySid[s] = 'president';
+      }
+      if (s == _mySid) {
+        _roleBySid[s] = 'manager';
+      }
+    }
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('회장 위임이 완료되었습니다.')));
   }
 
   Future<void> _delegateVice(String sid) async {
-    final mySid = await ListAuth.currentStudentId();
-    if (mySid == sid) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('본인에게는 위임할 수 없습니다.')));
+    if (_mySid == sid) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('본인에게는 위임할 수 없습니다.')));
       return;
     }
-
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('부회장 위임'),
         content: Text('학번 $sid 에게 부회장 직책을 위임하시겠습니까?\n(현재 사용자는 운영진으로 변경됩니다)'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('확인')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('확인'),
+          ),
         ],
       ),
     );
     if (ok != true) return;
 
     await ListAuth.delegateVice(club: widget.clubName, targetSid: sid);
-    _roleBySid.updateAll((key, value) => key == sid ? 'vice' : value);
-    if (mySid != null) _roleBySid[mySid] = 'manager';
-    if (mounted) setState(() {});
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('부회장 위임이 완료되었습니다.')));
+
+    for (var i = 0; i < _memberSids.length; i++) {
+      final s = _memberSids[i];
+      if (s == sid) {
+        _roleBySid[s] = 'vice';
+      }
+      if (s == _mySid) {
+        _roleBySid[s] = 'manager';
+      }
+    }
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('부회장 위임이 완료되었습니다.')));
   }
 
-  List<Widget> _buildActionsFor(String targetSid, String targetRole) {
-    final actions = <Widget>[];
+  /// ===== 미트볼 메뉴 구성 =====
 
+  List<_MenuAction> _menuFor(String targetSid, String targetRole) {
     final canAppoint = _myRole == 'president' || _myRole == 'vice';
     final isTop = targetRole == 'president' || targetRole == 'vice';
+    final isSelf = (_mySid != null && targetSid == _mySid);
 
-    // 운영진 임명/해임
+    final menu = <_MenuAction>[];
+
+    // 운영진 임명/해임 (상위직 대상 제외)
     if (canAppoint && !isTop) {
       if (targetRole == 'none') {
-        actions.add(
-          TextButton.icon(
-            onPressed: () => _appointManager(targetSid),
-            icon: const Icon(Icons.admin_panel_settings),
-            label: const Text('운영진 임명'),
-          ),
-        );
+        menu.add(_MenuAction('appoint', '운영진 임명', Icons.admin_panel_settings));
       } else if (targetRole == 'manager') {
-        actions.add(
-          TextButton.icon(
-            onPressed: () => _revokeManager(targetSid),
-            icon: const Icon(Icons.shield),
-            label: const Text('운영진 해임'),
-          ),
-        );
+        menu.add(_MenuAction('revoke', '운영진 해임', Icons.shield));
       }
     }
 
-    // 위임 (본인 자리만 가능)
-    if (_myRole == 'president' && targetRole != 'president') {
-      actions.add(
-        TextButton.icon(
-          onPressed: () => _delegatePresident(targetSid),
-          icon: const Icon(Icons.workspace_premium),
-          label: const Text('회장 위임'),
-        ),
-      );
+    // 회장/부회장 위임 (본인에게 위임 불가)
+    if (_myRole == 'president' && targetRole != 'president' && !isSelf) {
+      menu.add(_MenuAction('delegate_pres', '회장 위임', Icons.workspace_premium));
     }
-    if (_myRole == 'vice' && targetRole != 'vice') {
-      actions.add(
-        TextButton.icon(
-          onPressed: () => _delegateVice(targetSid),
-          icon: const Icon(Icons.military_tech),
-          label: const Text('부회장 위임'),
-        ),
-      );
+    if (_myRole == 'vice' && targetRole != 'vice' && !isSelf) {
+      menu.add(_MenuAction('delegate_vice', '부회장 위임', Icons.military_tech));
     }
 
-    return actions;
+    return menu;
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Scaffold(
-        appBar: AppBar(title: Text('부원 명단')),
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return Scaffold(body: const Center(child: CircularProgressIndicator()));
     }
 
-    // ✅ 권한 차단 화면 없음 — 탭에서 이미 필터됨
     return Scaffold(
-      appBar: AppBar(title: const Text('부원 명단')),
       body: _memberSids.isEmpty
           ? const Center(child: Text('등록된 부원이 없습니다.'))
           : ListView.separated(
-        itemCount: _memberSids.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (ctx, i) {
-          final sid = _memberSids[i];
-          final p = _personBySid[sid] ?? {};
-          final name = (p['name'] ?? '').toString();
-          final major = (p['major'] ?? '').toString();
-          final contact = (p['contact'] ?? '').toString();
-          final role = _roleBySid[sid] ?? 'none';
+              itemCount: _memberSids.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (ctx, i) {
+                final sid = _memberSids[i];
+                final p = _personBySid[sid] ?? {};
+                final name = (p['name'] ?? '').toString();
+                final major = (p['major'] ?? '').toString();
+                final contact = (p['contact'] ?? '').toString();
+                final role = _roleBySid[sid] ?? 'none';
 
-          return ListTile(
-            title: Text('$name ($sid)'),
-            subtitle: Text('학과: $major   전화: $contact'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Chip(
-                  label: Text(_roleLabel(role)),
-                  backgroundColor: switch (role) {
-                    'president' => Colors.orange.shade100,
-                    'vice' => Colors.blue.shade100,
-                    'manager' => Colors.green.shade100,
-                    _ => Colors.grey.shade200,
-                  },
-                ),
-                const SizedBox(width: 8),
-                ..._buildActionsFor(sid, role),
-              ],
+                return ListTile(
+                  title: Text('$name ($sid)'),
+                  subtitle: Text('학과: $major   전화: $contact'),
+                  trailing: Builder(
+                    builder: (context) {
+                      final actions = _menuFor(sid, role);
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Chip(
+                            label: Text(_roleLabel(role)),
+                            backgroundColor: _roleColor(role),
+                          ),
+                          if (actions.isNotEmpty) ...[
+                            const SizedBox(width: 4),
+                            PopupMenuButton<_MenuAction>(
+                              icon: const Icon(Icons.more_horiz), // 미트볼 아이콘
+                              tooltip: '작업',
+                              itemBuilder: (_) => actions
+                                  .map(
+                                    (a) => PopupMenuItem<_MenuAction>(
+                                      value: a,
+                                      child: Row(
+                                        children: [
+                                          Icon(a.icon, size: 18),
+                                          const SizedBox(width: 8),
+                                          Text(a.label),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              onSelected: (a) async {
+                                switch (a.key) {
+                                  case 'appoint':
+                                    await _appointManager(sid);
+                                    break;
+                                  case 'revoke':
+                                    await _revokeManager(sid);
+                                    break;
+                                  case 'delegate_pres':
+                                    await _delegatePresident(sid);
+                                    break;
+                                  case 'delegate_vice':
+                                    await _delegateVice(sid);
+                                    break;
+                                }
+                              },
+                            ),
+                          ],
+                        ],
+                      );
+                    },
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
