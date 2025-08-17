@@ -30,16 +30,20 @@ class _homepageState extends State<homepage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Container(child: Text('GSS'))),
+      appBar: AppBar(backgroundColor: Colors.white,title: Container(child: Text('GSS')),toolbarHeight: 40),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         currentIndex: _selectedIndex,
         onTap: _navigateBottomBar,
         type: BottomNavigationBarType.fixed,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Main'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'MyPage'),
+          BottomNavigationBarItem(icon: Icon(Icons.star,color: Color.fromRGBO(
+              172, 172, 172, 1.0)), label: 'Main'),
+          BottomNavigationBarItem(icon: Icon(Icons.search,color: Color.fromRGBO(
+              172, 172, 172, 1.0)), label: 'Search'),
+          BottomNavigationBarItem(icon: Icon(Icons.person,color: Color.fromRGBO(
+              172, 172, 172, 1.0)), label: 'MyPage'),
         ],
       ),
       drawer: Drawer(
