@@ -1,4 +1,4 @@
-import 'dart:ffi';
+//import 'dart:ffi';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:gss/mainpages/event.dart';
@@ -75,6 +75,7 @@ class DBsvc {
     final raw = snapshot.value as Map;
     return raw.values.map((e) => e.toString()).toList();
   }
+
 
   Future<List<Event>> loadEvents(String club, String date) async {
     final ref = FirebaseDatabase.instance.ref("Club/$club/calendar/$date");

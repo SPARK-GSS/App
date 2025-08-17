@@ -2,9 +2,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:gss/homepage.dart';
+
+import 'package:gss/mainpages/noticeboard.dart';
+import 'package:gss/mainpages/memberlist.dart';
 import 'package:gss/mainpages/calendar.dart';
 import 'package:gss/mainpages/event.dart';
 import 'package:gss/mainpages/group.dart';
+import 'package:gss/mainpages/sync_cal.dart';
+import 'package:gss/pages/newclub.dart';
+import 'package:gss/services/ApiService.dart';
 import 'package:gss/services/AuthService.dart';
 import 'package:gss/services/DBservice.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -34,6 +40,10 @@ class _ClubPageState extends State<ClubPage> {
   void initState() {
     super.initState();
     _clubFuture = _loadClubs();
+  }
+
+  Future _onRefresh() async {
+    await Future.delayed(Duration(milliseconds: 1000));
   }
 
   Future<List<String>> _loadClubs() async {
@@ -95,7 +105,9 @@ class _ClubPageState extends State<ClubPage> {
         actions: [
           IconButton(
             onPressed: () {
-              print("plus");
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (context) => ClubCreatePage()));
             },
             icon: Icon(Icons.add),
           ),
@@ -114,6 +126,7 @@ class _ClubPageState extends State<ClubPage> {
           if (club.isEmpty) {
             return const Center(child: Text('가입된 동아리가 없습니다.'));
           }
+
           return ListView.separated(
             itemCount: club.length,
             separatorBuilder: (_, __) => const Divider(),
@@ -175,41 +188,66 @@ class _ClubPageState extends State<ClubPage> {
 
 class Club extends StatefulWidget {
   final String clubName; // club 이름 저장
-
   const Club({super.key, required this.clubName});
+
   @override
   State<Club> createState() => _ClubState();
 }
 
 class _ClubState extends State<Club> {
+  late Future<bool> _canSeeMembers;
+
+  @override
+  void initState() {
+    super.initState();
+    // MemberList.dart 안의 ListAuth 사용 (이미 그 파일을 import 하고 있으니 OK)
+    _canSeeMembers = OfficerService.canManage(widget.clubName);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4, // 탭 개수
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('상단 메뉴 예시'),
-          bottom: const TabBar(
-            isScrollable: true,
-            tabs: [
-              Tab(text: '모임'),
-              Tab(text: '정산'),
-              Tab(text: '공지'),
-              Tab(text: '캘린더'),
-            ],
+    return FutureBuilder<bool>(
+      future: _canSeeMembers,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final showMembers = snap.data ?? false;
+
+        // 동적으로 탭/뷰 구성
+        final tabs = <Tab>[
+          const Tab(text: '모임'),
+          const Tab(text: '정산'),
+          const Tab(text: '공지'),
+          const Tab(text: '캘린더'),
+          if (showMembers) const Tab(text: '부원'),
+        ];
+
+        final views = <Widget>[
+          const Center(child: Text('모임 페이지')),
+          const Center(child: Text('정산 페이지')),
+          NoticeBoard(clubName: widget.clubName),
+          CalendarApp(clubName: widget.clubName),
+          if (showMembers) MemberList(clubName: widget.clubName),
+        ];
+
+        return DefaultTabController(
+          length: tabs.length,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(widget.clubName),
+              bottom: TabBar(
+                isScrollable: true,
+                tabs: tabs,
+              ),
+            ),
+            body: TabBarView(children: views),
           ),
-        ),
-        body: TabBarView(
-          children: [
-            //Group(clubName: widget.clubName),
-            Center(child: Text('모임 페이지')),
-            Center(child: Text('정산 페이지')),
-            Center(child: Text('공지 페이지')),
-            Calendar(clubName: widget.clubName)
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
