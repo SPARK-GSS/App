@@ -191,7 +191,7 @@ class _LogInState extends State<LogIn> {
                 style: TextStyle(
                   fontFamily: "Pretendard",
                   fontWeight: FontWeight.w800,
-                  color: Color.fromRGBO(149, 149, 149, 1.0),
+                  color: Color.fromRGBO(255, 255, 255, 1.0),
                 ),
               ),
             ),
@@ -276,7 +276,7 @@ class _LogInState extends State<LogIn> {
                   icon: SizedBox(
                     height: 50,
                     width: 50,
-                    child: Image.asset('assets/google.jpg'),
+                    child: Image.asset('assets/google.png'),
                   ),
                 ),
                 IconButton(
@@ -366,7 +366,7 @@ class SignUp extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(
-                        child: Image.asset('assets/google.jpg'),
+                        child: Image.asset('assets/google.png'),
                         height: 50,
                         width: 50,
                       ),

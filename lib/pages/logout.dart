@@ -36,13 +36,14 @@ class LogOutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("로그아웃")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text("로그아웃"),backgroundColor: Colors.white,),
       body: Center(
         child: ElevatedButton(
           onPressed: () => _logout(context),
           child: const Text("로그아웃"),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
+            backgroundColor: Color.fromRGBO(209, 87, 90, 1.0),
             foregroundColor: Colors.white,
           ),
         ),

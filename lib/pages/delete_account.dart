@@ -149,27 +149,47 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
         user?.providerData.any((info) => info.providerId == 'google.com') ?? false;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("회원 탈퇴")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text("회원 탈퇴"),backgroundColor: Colors.white,),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center, // 세로축 중앙 정렬
+          crossAxisAlignment: CrossAxisAlignment.center, // 가로축 중앙 정렬
           children: [
             if (user?.email != null)
-              Text("현재 계정: ${user!.email}", style: const TextStyle(fontSize: 16)),
+              Text("현재 계정: ${user!.email}", style: const TextStyle(fontSize: 16, color: Color.fromRGBO(
+                  216, 162, 163, 1.0))),
             const SizedBox(height: 20),
             if (!isGoogleUser)
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: "비밀번호 입력"),
+
+            TextField(
+              controller:  _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: "비밀번호 입력",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                ),
+                enabledBorder: OutlineInputBorder(     // 비활성화
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                  borderSide: BorderSide(color: Colors.transparent, width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(     // 포커스
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                  borderSide: BorderSide(color: Colors.transparent, width: 2),
+                ),
+                filled: true,
+                fillColor: Color(0xFFDDDDDD),
               ),
-            const SizedBox(height: 30),
+            ),
+            const SizedBox(height: 20),
             _isLoading
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
               onPressed: _deleteAccount,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: Color.fromRGBO(209, 87, 90, 1.0),
                 foregroundColor: Colors.white,
               ),
               child: const Text("계정 삭제"),

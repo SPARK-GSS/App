@@ -72,21 +72,54 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("비밀번호 변경")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text("비밀번호 변경"),backgroundColor: Colors.white,),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center, // 세로축 중앙 정렬
+          crossAxisAlignment: CrossAxisAlignment.center, // 가로축 중앙 정렬
           children: [
             TextField(
               controller: _currentPwController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: "현재 비밀번호"),
+              decoration: const InputDecoration(
+                labelText: "현재 비밀번호",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                ),
+                enabledBorder: OutlineInputBorder(     // 비활성화
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                  borderSide: BorderSide(color: Colors.transparent, width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(     // 포커스
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                  borderSide: BorderSide(color: Colors.transparent, width: 2),
+                ),
+                filled: true,
+                fillColor: Color(0xFFDDDDDD),
+              ),
             ),
             const SizedBox(height: 20),
             TextField(
-              controller: _newPwController,
+              controller: _currentPwController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: "새 비밀번호"),
+              decoration: const InputDecoration(
+                labelText: "새 비밀번호",
+                border: OutlineInputBorder(            // 기본 테두리
+                  borderRadius: BorderRadius.all(Radius.circular(30)), // 둥근 모서리
+                ),
+                enabledBorder: OutlineInputBorder(     // 비활성화 상태
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                  borderSide: BorderSide(color: Colors.transparent, width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(     // 포커스 상태 (커서 들어왔을 때)
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                  borderSide: BorderSide(color: Colors.transparent, width: 2),
+                ),
+                filled: true,                          // 배경색 활성화
+                fillColor: Color(0xFFDDDDDD),           // 배경색 지정
+              ),
             ),
             const SizedBox(height: 30),
             _isLoading
@@ -95,7 +128,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               onPressed: _changePassword,
               child: const Text("비밀번호 변경"),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: Color.fromRGBO(216, 162, 163, 1.0),
                 foregroundColor: Colors.white,
               ),
             )

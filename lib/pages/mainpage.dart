@@ -22,6 +22,7 @@ class UserMain extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(child: ClubPage());
+
   }
 }
 
@@ -96,8 +97,11 @@ class _ClubPageState extends State<ClubPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('내 동아리'),
+        backgroundColor: Colors.white,
+        title: const Text('내 동아리',style:TextStyle(fontFamily: "Pretendard",fontWeight: FontWeight.w700)),
+        centerTitle: true,
         actions: [
           IconButton(
             onPressed: () {
@@ -127,60 +131,53 @@ class _ClubPageState extends State<ClubPage> {
             itemCount: club.length,
             separatorBuilder: (_, __) => const Divider(),
             itemBuilder: (_, i) => ListTile(
+              contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
               onTap: () {
                 print("${club[i]}");
                 Navigator.of(
                   context,
                 ).push(MaterialPageRoute(builder: (context) => Club(clubName: '${club[i]}')));
               },
-              leading: CircleAvatar(
-                radius: 20,
-                backgroundImage: AssetImage('assets/${club[i]}.png'),
-                backgroundColor: Colors.grey[200],
-              ),
-              title: Text(club[i]),
-              trailing: FutureBuilder<String>(
-                future: OfficerService.printingRole(club[i]),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    );
-                  } else if (snapshot.hasError) {
-                    //return const Icon(Icons.error, color: Colors.red);
-                    return Text("${snapshot.error}");
-                    return const Icon(Icons.error, color: Colors.red);
-                  } else {
-                    return Text(snapshot.data ?? '');
-                  }
-                },
-                leading: CircleAvatar(
-                  radius: 20,
-                  backgroundImage: AssetImage('assets/${club[i]}.png'),
-                  backgroundColor: Colors.grey[200],
-                ),
-                title: Text(club[i]),
-                trailing: FutureBuilder<String>(
-                  future: user_status(club[i]),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      );
-                    } else if (snapshot.hasError) {
-                      return const Icon(Icons.error, color: Colors.red);
-                      //Text("${snapshot.error}")
-                      //const Icon(Icons.error, color: Colors.red);
-                    } else {
-                      return Text(snapshot.data ?? '');
-                    }
-                  },
+              trailing: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/${club[i]}.png',
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
                 ),
               ),
+              leading: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+              FutureBuilder<String>(
+              future: user_status(club[i]),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  );
+                } else if (snapshot.hasError) {
+                  return const Icon(Icons.error, color: Colors.red);
+                  //Text("${snapshot.error}")
+                  //const Icon(Icons.error, color: Colors.red);
+                } else {
+                  return Text(snapshot.data ?? '',style:TextStyle(fontFamily: "Pretendard", color:Color.fromRGBO(
+                      216, 162, 163, 1.0)));
+                }
+              },
+            ),
+                  Text(club[i],style:TextStyle(fontFamily: "Pretendard",fontWeight: FontWeight.w700, fontSize: 15)),
+                  Text(
+                    '동아리 한 줄 소개',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+
             ),
           );
         },
