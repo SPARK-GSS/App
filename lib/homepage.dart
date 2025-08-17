@@ -6,7 +6,7 @@ import 'package:gss/pages/mypage.dart';
 import 'package:gss/pages/search.dart';
 import 'package:gss/services/AuthService.dart';
 
-
+//풀리퀘점
 
 class homepage extends StatefulWidget {
   const homepage({super.key});
