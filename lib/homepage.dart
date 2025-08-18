@@ -5,6 +5,7 @@ import 'package:gss/pages/mainpage.dart';
 import 'package:gss/pages/mypage.dart';
 import 'package:gss/pages/search.dart';
 import 'package:gss/services/AuthService.dart';
+import 'package:gss/chat/chat_list.dart';
 
 //풀리퀘점
 
@@ -25,7 +26,7 @@ class _homepageState extends State<homepage> {
     });
   }
 
-  final List<Widget> _pages = [UserMain(), UserSearch(), UserMy()];
+  final List<Widget> _pages = [UserMain(), UserSearch(), ChatListPage(), UserMy()];
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +43,7 @@ class _homepageState extends State<homepage> {
               172, 172, 172, 1.0)), label: 'Main'),
           BottomNavigationBarItem(icon: Icon(Icons.search,color: Color.fromRGBO(
               172, 172, 172, 1.0)), label: 'Search'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline, color: Color.fromRGBO(172,172,172,1.0)), label: 'Chat'),
           BottomNavigationBarItem(icon: Icon(Icons.person,color: Color.fromRGBO(
               172, 172, 172, 1.0)), label: 'MyPage'),
         ],
