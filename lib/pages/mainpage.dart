@@ -152,7 +152,7 @@ class _ClubPageState extends State<ClubPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
               FutureBuilder<String>(
-              future: user_status(club[i]),
+              future: OfficerService.printingRole(club[i]),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox(
