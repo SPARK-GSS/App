@@ -3,6 +3,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:gss/mainpages/event.dart';
 import 'package:gss/model/person.dart';
+import 'package:intl/intl.dart';
 
 class DBsvc {
   FirebaseDatabase database = FirebaseDatabase.instance;
@@ -27,9 +28,10 @@ class DBsvc {
     String email,
     String major,
     String gender,
-    String birth,
+    DateTime birth,
     String phone,
   ) async {
+    final formattedDate = DateFormat('yyyy-MM-dd').format(birth);
     DatabaseReference ref = FirebaseDatabase.instance.ref("Person/$stuid");
     await ref.set({
       "school": "SKKU",
@@ -39,7 +41,7 @@ class DBsvc {
       "email": email,
       "major": major,
       "gender": gender,
-      "birth": birth,
+      "birth": formattedDate,
       "clubs": {},
     });
   }

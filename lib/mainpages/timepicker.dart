@@ -155,3 +155,109 @@ class _DateTimePickerExampleState extends State<DateTimePickerExample> {
     );
   }
 }
+
+
+class DatePicker extends StatefulWidget {
+  final Function(DateTime) onDateTimeChanged;  
+  const DatePicker({super.key, required this.onDateTimeChanged});
+
+  @override
+  State<DatePicker> createState() => _DatePickerState();
+}
+
+class _DatePickerState extends State<DatePicker> {
+  DateTime selectedDate = DateTime.now();
+
+  void _notifyParent() {
+  final combinedDateTime = DateTime(
+    selectedDate.year,
+    selectedDate.month,
+    selectedDate.day,
+  );
+  widget.onDateTimeChanged(combinedDateTime);
+}
+
+  Widget _buildSheetHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        CupertinoButton(
+          child: const Text(
+            'Cancel',
+            style: TextStyle(color: Colors.red),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        CupertinoButton(
+          child: const Text('Done'),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ],
+    );
+  }
+  
+  void _showDatePicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return SizedBox(
+          height: 300,
+          child: Column(
+            children: [
+              _buildSheetHeader(),
+              Expanded(
+                child: CupertinoDatePicker(
+                  initialDateTime: selectedDate,
+                  maximumDate: DateTime(2025, 12, 31),
+                  minimumYear: 1950,
+                  maximumYear: 2025,
+                  mode: CupertinoDatePickerMode.date,
+                  onDateTimeChanged: (DateTime value) {
+                    setState(() {
+                      selectedDate = value;
+                    });
+                    _notifyParent();
+                  },
+                
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    final combinedDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    );
+
+    return Scaffold(
+      body: Center(
+        child: SizedBox(
+          height: 50, // Row 높이 제한
+          child: 
+              Expanded(
+                child:  IconButton(onPressed: _showDatePicker, icon: Text(DateFormat('yyyy-MM-dd').format(selectedDate)))
+                // child: Column(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     Text(DateFormat('yyyy-MM-dd').format(selectedDate)),
+                //     IconButton(
+                //       onPressed: _showDatePicker,
+                //       icon: Icon(Icons.calendar_today),
+                //     ),
+                //   ],
+                // ),
+              ),
+          ),
+        ),
+      );
+    
+  }
+}

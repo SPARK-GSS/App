@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:gss/main.dart';
+import 'package:gss/mainpages/timepicker.dart';
 import 'package:gss/services/AuthService.dart';
 import 'package:gss/services/DBservice.dart';
+import 'package:intl/intl.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class EmailSignUpPage extends StatefulWidget {
   const EmailSignUpPage({super.key});
@@ -32,19 +36,25 @@ class _EmailSignUpPageState extends State<EmailSignUpPage> {
     super.dispose();
   }
 
-
   int currentStep = 0;
   String gender = '남';
+
+  // ✅ Stepper 밖에서 한 번만 선언
+  final _formKey = GlobalKey<FormState>();
+  bool isAuthed = false;
+
+  DateTime selectedStartDateTime = DateTime.now();
   List<Step> steps() => [
     Step(
       state: currentStep > 0 ? StepState.complete : StepState.indexed,
-      title: Text('Account'),
-      content: Container(
+      title: const Text('Account'),
+      content: Form(
+        key: _formKey, // ✅ Account 단계 전체를 Form으로 감싸기
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              TextField(
+              TextFormField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
@@ -54,7 +64,30 @@ class _EmailSignUpPageState extends State<EmailSignUpPage> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "이메일을 입력해주세요";
+                  }
+                  // 간단 이메일 정규식
+                  String pattern = r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
+                  if (!RegExp(pattern).hasMatch(value)) {
+                    return "올바른 이메일 형식이 아닙니다";
+                  }
+                  return null;
+                },
+                autovalidateMode:
+                    AutovalidateMode.onUserInteraction, // 입력 즉시 검사
               ),
+              //     IconButton(onPressed: () async {
+              //                     final authCredential = EmailAuthProvider
+              //     .credentialWithLink(email: emailController.text, emailLink: emailLink.toString());
+              // try {
+              //     await FirebaseAuth.instance.currentUser
+              //         ?.linkWithCredential(authCredential);
+              // } catch (error) {
+              //     print("Error linking emailLink credential.");
+              // }
+              //     }, icon: Text("이메일 인증증"))
               const SizedBox(height: 16),
               TextField(
                 controller: passwordController,
@@ -79,11 +112,6 @@ class _EmailSignUpPageState extends State<EmailSignUpPage> {
                   ),
                 ),
               ),
-              // const SizedBox(height: 32),
-              // ElevatedButton(
-              //   onPressed: registerWithEmailAndPassword,
-              //   child: const Text("회원가입"),
-              // ),
             ],
           ),
         ),
@@ -101,16 +129,22 @@ class _EmailSignUpPageState extends State<EmailSignUpPage> {
               TextField(
                 controller: stuidController,
                 decoration: const InputDecoration(labelText: '학번'),
+                keyboardType: TextInputType.number, // 숫자 키보드 표시
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly, // 숫자만 입력 허용
+                ],
               ),
+
               TextField(
                 controller: nameController,
                 keyboardType: TextInputType.name,
                 decoration: const InputDecoration(labelText: '이름'),
               ),
-              TextField(
-                controller: majorController,
-                decoration: const InputDecoration(labelText: '학과'),
-              ),
+              // TextField(
+              //   controller: majorController,
+              //   decoration: const InputDecoration(labelText: '학과'),
+              // ),
+              MajorField(majorController: majorController),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -136,25 +170,30 @@ class _EmailSignUpPageState extends State<EmailSignUpPage> {
                   const Text('여'),
                 ],
               ),
-
               // TextField(
-              //   controller: genderController,
-              //   decoration: const InputDecoration(labelText: '성별'),
+              //   controller: phoneNumController,
+              //   keyboardType: TextInputType.phone,
+              //   decoration: const InputDecoration(labelText: '전화번호'),
               // ),
-              TextField(
-                controller: phoneNumController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: '전화번호'),
+              PhoneNumberField(phoneNumController: phoneNumController),
+              SizedBox(
+                height: 150,
+                child: Row(
+                  children: [
+                    const Text('생년월일'),
+                    Expanded(
+                      // ✅ 여기서 Expanded 사용
+                      child: DatePicker(
+                        onDateTimeChanged: (DateTime birthDate) {
+                          setState(() {
+                            selectedStartDateTime = birthDate;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              TextField(
-                controller: birthController,
-                decoration: const InputDecoration(labelText: '생년월일'),
-              ),
-              // const SizedBox(height: 32),
-              // ElevatedButton(
-              //   onPressed: registerWithEmailAndPassword,
-              //   child: const Text("회원가입"),
-              // ),
             ],
           ),
         ),
@@ -186,7 +225,7 @@ class _EmailSignUpPageState extends State<EmailSignUpPage> {
                 style: TextStyle(fontSize: 20.0),
               ),
               Text(
-                'Gender: ${genderController.text}',
+                'Gender: $gender',
                 style: TextStyle(fontSize: 20.0),
               ),
               Text(
@@ -194,7 +233,7 @@ class _EmailSignUpPageState extends State<EmailSignUpPage> {
                 style: TextStyle(fontSize: 20.0),
               ),
               Text(
-                'Birth: ${birthController.text}',
+                'Birth: ${DateFormat('yyyy-MM-dd').format(selectedStartDateTime)}',
                 style: TextStyle(fontSize: 20.0),
               ),
             ],
@@ -267,6 +306,13 @@ class _EmailSignUpPageState extends State<EmailSignUpPage> {
                 final password = passwordController.text;
                 final confirmPassword = confirmPasswordController.text;
 
+                if (!_formKey.currentState!.validate()) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(content: Text("이메일 형식이 아닙니다.")),
+                  );
+                  return;
+                }
+
                 if (email.isEmpty ||
                     password.isEmpty ||
                     confirmPassword.isEmpty) {
@@ -299,8 +345,8 @@ class _EmailSignUpPageState extends State<EmailSignUpPage> {
                     nameController.text,
                     emailController.text,
                     majorController.text,
-                    genderController.text,
-                    birthController.text,
+                    gender,
+                    selectedStartDateTime,
                     phoneNumController.text,
                   );
                   print("회원가입 성공: ${userCredential.user?.email}");
@@ -339,8 +385,8 @@ class GoogleSignUpPage extends StatefulWidget {
 
 class _GoogleSignUpPageState extends State<GoogleSignUpPage> {
   @override
-
   String gender = '남';
+  DateTime selectedStartDateTime = DateTime.now();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController stuidController = TextEditingController();
   final TextEditingController majorController = TextEditingController();
@@ -404,21 +450,40 @@ class _GoogleSignUpPageState extends State<GoogleSignUpPage> {
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(labelText: '전화번호'),
               ),
-              TextField(
-                controller: birthController,
-                decoration: const InputDecoration(labelText: '생년월일'),
+              // TextField(
+              //   controller: birthController,
+              //   decoration: const InputDecoration(labelText: '생년월일'),
+              // ),
+              PhoneNumberField(phoneNumController: phoneNumController),
+              SizedBox(
+                height: 150,
+                child: Row(
+                  children: [
+                    const Text('생년월일'),
+                    Expanded(
+                      // ✅ 여기서 Expanded 사용
+                      child: DatePicker(
+                        onDateTimeChanged: (DateTime birthDate) {
+                          setState(() {
+                            selectedStartDateTime = birthDate;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: (){
+                onPressed: () {
                   DBsvc().DBsignup(
                     stuidController.text,
                     nameController.text,
                     user_email()!,
                     majorController.text,
-                    genderController.text,
-                    birthController.text,
-                    phoneNumController.text,
+                    gender,
+                    selectedStartDateTime,
+                    phoneNumController.text
                   );
                   Navigator.pushReplacement(
                     context,
@@ -431,6 +496,78 @@ class _GoogleSignUpPageState extends State<GoogleSignUpPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class MajorField extends StatelessWidget {
+  final TextEditingController majorController;
+
+  MajorField({super.key, required this.majorController});
+
+  // 학과 목록 (예: 가나다순 정렬)
+  final List<String> majors = [
+    "유학.동양학과",
+    "국어국문학과",
+    "영어영문학과",
+    "독어독문학과",
+    "러시아어문학과",
+    "프랑스어문학과",
+    "중어중문학과",
+    "한문학과",
+    "사학과",
+    "철학과",
+    "문헌정보학과",
+    "행정학과",
+    "정치외교학과",
+    "미디어커뮤니케이션학과",
+    "사회학과",
+    "test",
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Autocomplete<String>(
+      optionsBuilder: (TextEditingValue textEditingValue) {
+        // 입력 없으면 전체 학과 보여주기
+        if (textEditingValue.text.isEmpty) {
+          return majors;
+        }
+        // 입력한 글자로 시작하는 학과만 필터링
+        return majors.where((major) => major.contains(textEditingValue.text));
+      },
+      onSelected: (String selection) {
+        majorController.text = selection;
+      },
+      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+        return TextField(
+          controller: controller,
+          focusNode: focusNode,
+          decoration: const InputDecoration(labelText: "학과"),
+        );
+      },
+    );
+  }
+}
+
+class PhoneNumberField extends StatelessWidget {
+  final TextEditingController phoneNumController;
+
+  PhoneNumberField({super.key, required this.phoneNumController});
+
+  // 3-4-4 패턴 지정
+  final maskFormatter = MaskTextInputFormatter(
+    mask: '###-####-####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: phoneNumController,
+      keyboardType: TextInputType.phone,
+      inputFormatters: [maskFormatter],
+      decoration: const InputDecoration(labelText: '전화번호'),
     );
   }
 }
