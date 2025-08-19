@@ -3,8 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:gss/pages/login.dart';
 
-class LogOutPage extends StatelessWidget {
-  const LogOutPage({super.key});
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:gss/pages/login.dart';
+
+class LogOutButton extends StatelessWidget {
+  const LogOutButton({super.key});
 
   Future<void> _logout(BuildContext context) async {
     try {
@@ -35,19 +40,42 @@ class LogOutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text("로그아웃"),backgroundColor: Colors.white,),
-      body: Center(
+    return Center(
+      child: SizedBox(
+        width: 120,
+        height: 45,
         child: ElevatedButton(
-          onPressed: () => _logout(context),
+          onPressed: () async {
+            final result = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text("로그아웃"),
+                content: const Text("로그아웃 하시겠습니까?"),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false), // 취소
+                    child: const Text("취소"),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true), // 확인
+                    child: const Text("확인"),
+                  ),
+                ],
+              ),
+            );
+
+            if (result == true) {
+              _logout(context); // ✅ 팝업에서 확인 누르면 로그아웃 실행
+            }
+          },
           child: const Text("로그아웃"),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color.fromRGBO(209, 87, 90, 1.0),
+            backgroundColor: const Color.fromRGBO(209, 87, 90, 1.0),
             foregroundColor: Colors.white,
           ),
         ),
       ),
     );
   }
+
 }

@@ -7,6 +7,10 @@ import 'package:gss/pages/change_password.dart';
 // import 'package:gss/pages/theme_settings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:gss/pages/login.dart';
 
 // 이메일 가져오기
 String? _userEmail() {
@@ -91,16 +95,6 @@ class UserMy extends StatelessWidget {
           ),
           _buildSettingButton(
             context,
-            title: '로그아웃',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const LogOutPage()),
-              );
-            },
-          ),
-          _buildSettingButton(
-            context,
             title: '회원 탈퇴',
             onPressed: () {
               Navigator.push(
@@ -134,12 +128,17 @@ class UserMy extends StatelessWidget {
             title: '다크모드',
             onPressed: () {
               // Navigator.push(context, MaterialPageRoute(builder: (_) => ThemeSettingsPage()));
+
             },
           ),
+          const SizedBox(height: 30),
+          const LogOutButton(),
+
         ],
       ),
     );
   }
+
 
   Widget _buildSettingButton(BuildContext context,
       {required String title, required VoidCallback onPressed,
@@ -162,3 +161,7 @@ class UserMy extends StatelessWidget {
     );
   }
 }
+
+
+
+
