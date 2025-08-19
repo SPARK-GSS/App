@@ -224,10 +224,7 @@ class _EmailSignUpPageState extends State<EmailSignUpPage> {
                 'Major: ${majorController.text}',
                 style: TextStyle(fontSize: 20.0),
               ),
-              Text(
-                'Gender: $gender',
-                style: TextStyle(fontSize: 20.0),
-              ),
+              Text('Gender: $gender', style: TextStyle(fontSize: 20.0)),
               Text(
                 'Phone No.: ${phoneNumController.text}',
                 style: TextStyle(fontSize: 20.0),
@@ -405,16 +402,17 @@ class _GoogleSignUpPageState extends State<GoogleSignUpPage> {
               TextField(
                 controller: stuidController,
                 decoration: const InputDecoration(labelText: '학번'),
+                keyboardType: TextInputType.number, // 숫자 키보드 표시
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly, // 숫자만 입력 허용
+                ],
               ),
               TextField(
                 controller: nameController,
                 keyboardType: TextInputType.name,
                 decoration: const InputDecoration(labelText: '이름'),
               ),
-              TextField(
-                controller: majorController,
-                decoration: const InputDecoration(labelText: '학과'),
-              ),
+              MajorField(majorController: majorController),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -445,11 +443,11 @@ class _GoogleSignUpPageState extends State<GoogleSignUpPage> {
               //   controller: genderController,
               //   decoration: const InputDecoration(labelText: '성별'),
               // ),
-              TextField(
-                controller: phoneNumController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: '전화번호'),
-              ),
+              // TextField(
+              //   controller: phoneNumController,
+              //   keyboardType: TextInputType.phone,
+              //   decoration: const InputDecoration(labelText: '전화번호'),
+              // ),
               // TextField(
               //   controller: birthController,
               //   decoration: const InputDecoration(labelText: '생년월일'),
@@ -483,7 +481,7 @@ class _GoogleSignUpPageState extends State<GoogleSignUpPage> {
                     majorController.text,
                     gender,
                     selectedStartDateTime,
-                    phoneNumController.text
+                    phoneNumController.text,
                   );
                   Navigator.pushReplacement(
                     context,
