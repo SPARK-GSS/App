@@ -1,13 +1,20 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:gss/services/AuthService.dart';
+import 'package:image_picker/image_picker.dart';
 
+/// =======================
+/// 모델
+/// =======================
 class Notice {
   final String id;
   final String title;
   final String content;
-  final String? imageUrl;
+  final List<String> imageUrls;
   final int createdAt;
   final String? author;
 
@@ -15,23 +22,39 @@ class Notice {
     required this.id,
     required this.title,
     required this.content,
-    this.imageUrl,
+    required this.imageUrls,
     required this.createdAt,
     this.author,
   });
 
   factory Notice.fromMap(String id, Map m) {
+    // 하위호환: imageUrl (String) OR imageUrls (List/Map)
+    final List<String> imgs = [];
+    if (m['imageUrls'] is List) {
+      imgs.addAll(List.from(m['imageUrls']).whereType<String>());
+    } else if (m['imageUrls'] is Map) {
+      imgs.addAll(Map<String, dynamic>.from(m['imageUrls']).values
+          .map((e) => e?.toString() ?? '')
+          .where((s) => s.isNotEmpty));
+    } else if (m['imageUrl'] is String) {
+      final s = (m['imageUrl'] as String);
+      if (s.isNotEmpty) imgs.add(s);
+    }
+
     return Notice(
       id: id,
       title: (m['title'] ?? '').toString(),
       content: (m['content'] ?? '').toString(),
-      imageUrl: (m['imageUrl'] as String?),
+      imageUrls: imgs,
       createdAt: (m['createdAt'] ?? 0) as int,
       author: m['author'] as String?,
     );
   }
 }
 
+/// =======================
+/// 공지 리스트
+/// =======================
 class NoticeBoard extends StatelessWidget {
   final String clubName;
   const NoticeBoard({super.key, required this.clubName});
@@ -46,99 +69,134 @@ class NoticeBoard extends StatelessWidget {
       builder: (context, snap) {
         final canManage = snap.data ?? false;
         return Scaffold(
+          body: StreamBuilder<DatabaseEvent>(
+            stream: _ref.onValue,
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final data = snap.data?.snapshot.value;
+              if (data == null) {
+                return const Center(child: Text('등록된 공지가 없습니다.'));
+              }
+              final map = Map<String, dynamic>.from(data as Map);
+              final items = map.entries
+                  .map((e) => Notice.fromMap(
+                e.key,
+                Map<String, dynamic>.from(e.value),
+              ))
+                  .toList()
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-        body: StreamBuilder<DatabaseEvent>(
-        stream: _ref.onValue,
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final data = snap.data?.snapshot.value;
-          if (data == null) {
-            return const Center(child: Text('등록된 공지가 없습니다.'));
-          }
-          final map = Map<String, dynamic>.from(data as Map);
-          // 최신순 정렬 (createdAt 내림차순)
-          final items = map.entries
-              .map((e) => Notice.fromMap(e.key, Map<String, dynamic>.from(e.value)))
-              .toList()
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (_, i) {
-              final n = items[i];
-              return ListTile(
-                leading: n.imageUrl != null && n.imageUrl!.isNotEmpty
-                    ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(n.imageUrl!, width: 56, height: 56, fit: BoxFit.cover),
-                )
-                    : Container(
-                  width: 56,
-                  height: 56,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.image_not_supported),
-                ),
-                title: Text(
-                  n.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  n.content,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => NoticeDetailPage(notice: n, clubName: clubName),
-                  ));
+              return ListView.separated(
+                padding: const EdgeInsets.all(12),
+                itemCount: items.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (_, i) {
+                  final n = items[i];
+                  final thumb = (n.imageUrls.isNotEmpty) ? n.imageUrls.first : null;
+                  return ListTile(
+                    leading: thumb != null
+                        ? Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            thumb,
+                            width: 56,
+                            height: 56,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        if (n.imageUrls.length > 1)
+                          Positioned(
+                            right: -6,
+                            top: -6,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.black87,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '+${n.imageUrls.length - 1}',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 11),
+                              ),
+                            ),
+                          ),
+                      ],
+                    )
+                        : Container(
+                      width: 56,
+                      height: 56,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.image_not_supported),
+                    ),
+                    title: Text(
+                      n.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      n.content,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) =>
+                            NoticeDetailPage(notice: n, clubName: clubName),
+                      ));
+                    },
+                  );
                 },
               );
             },
-          );
-        },
-      ),
-      floatingActionButton: canManage
-          ? FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => NoticeEditorPage(clubName: clubName),
-          ));
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('공지 작성'),
-      )
-          : null,
+          ),
+          floatingActionButton: canManage
+              ? FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => NoticeEditorPage(clubName: clubName),
+              ));
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('공지 작성'),
+          )
+              : null,
+        );
+      },
     );
-  },
-  );
   }
 }
 
+/// =======================
+/// 공지 상세 + 케밥 메뉴(수정/삭제)
+/// =======================
 class NoticeDetailPage extends StatefulWidget {
   final Notice notice;
   final String clubName;
-  const NoticeDetailPage({super.key, required this.notice, required this.clubName});
+  const NoticeDetailPage(
+      {super.key, required this.notice, required this.clubName});
 
   @override
   State<NoticeDetailPage> createState() => _NoticeDetailPageState();
 }
 
 class _NoticeDetailPageState extends State<NoticeDetailPage> {
-  late Notice _notice; // 수정 후 갱신용
+  late Notice _notice;
+  bool _menuVisible = false;
+
   DatabaseReference get _ref =>
       FirebaseDatabase.instance.ref('Club/${widget.clubName}/notices');
-
-  bool _menuVisible = false;
 
   @override
   void initState() {
@@ -146,10 +204,12 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
     _notice = widget.notice;
     _computeMenuVisible();
   }
+
   Future<void> _computeMenuVisible() async {
     final canManage = await OfficerService.canManage(widget.clubName);
     if (mounted) setState(() => _menuVisible = canManage || false);
   }
+
   Future<void> _deleteNotice() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -157,22 +217,48 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
         title: const Text('삭제하시겠습니까?'),
         content: const Text('삭제 후 되돌릴 수 없습니다.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('삭제', style: TextStyle(color: Colors.red))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('취소')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('삭제', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
-
     if (ok != true) return;
 
     try {
+      // 1) DB 삭제
       await _ref.child(_notice.id).remove();
+      // 2) Storage 이미지들도 정리(선택)
+      await _deleteAllImagesFromStorage(_notice);
+
       if (!mounted) return;
-      Navigator.of(context).pop(); // 상세 페이지 닫기
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('삭제되었습니다.')));
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('삭제되었습니다.')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
+    }
+  }
+
+  Future<void> _deleteAllImagesFromStorage(Notice n) async {
+    if (n.imageUrls.isEmpty) return;
+    // 이미지 파일 경로를 정확히 모르므로, notice 폴더 통째로 지우는 방식을 권장
+    // 구조: Club/{club}/notices/{id}/images/{...}
+    final folderRef = FirebaseStorage.instance
+        .ref()
+        .child('Club/${widget.clubName}/notices/${n.id}/images');
+    try {
+      final list = await folderRef.listAll();
+      for (final item in list.items) {
+        await item.delete();
+      }
+    } catch (_) {
+      // 폴더가 없거나 권한 문제일 경우 무시
     }
   }
 
@@ -181,12 +267,12 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
       MaterialPageRoute(
         builder: (_) => NoticeEditorPage(
           clubName: widget.clubName,
-          initial: _notice, // 수정 모드
+          initial: _notice,
         ),
       ),
     );
     if (updated != null && mounted) {
-      setState(() => _notice = updated); // 화면 즉시 갱신
+      setState(() => _notice = updated);
     }
   }
 
@@ -210,18 +296,15 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
                   child: Text('삭제', style: TextStyle(color: Colors.red)),
                 ),
               ],
-              icon: const Icon(Icons.more_vert), // 케밥 메뉴
+              icon: const Icon(Icons.more_vert),
             ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          if (_notice.imageUrl != null && _notice.imageUrl!.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(_notice.imageUrl!, fit: BoxFit.cover),
-            ),
+          if (_notice.imageUrls.isNotEmpty)
+            _ImagesGallery(imageUrls: _notice.imageUrls),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -245,9 +328,85 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
   }
 }
 
+/// 슬라이더 + 썸네일 그리드(간단 버전: 가로 스크롤 썸네일)
+class _ImagesGallery extends StatefulWidget {
+  final List<String> imageUrls;
+  const _ImagesGallery({required this.imageUrls});
+
+  @override
+  State<_ImagesGallery> createState() => _ImagesGalleryState();
+}
+
+class _ImagesGalleryState extends State<_ImagesGallery> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final urls = widget.imageUrls;
+    return Column(
+      children: [
+        AspectRatio(
+          aspectRatio: 16 / 9,
+          child: PageView.builder(
+            itemCount: urls.length,
+            controller: PageController(viewportFraction: 1),
+            onPageChanged: (i) => setState(() => _index = i),
+            itemBuilder: (_, i) => GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => Dialog(
+                    insetPadding: const EdgeInsets.all(12),
+                    child: InteractiveViewer(
+                      child: Image.network(urls[i], fit: BoxFit.contain),
+                    ),
+                  ),
+                );
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(urls[i], fit: BoxFit.cover),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 64,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: urls.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (_, i) => GestureDetector(
+              onTap: () => setState(() => _index = i),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: i == _index ? Colors.purple : Colors.transparent,
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.network(urls[i],
+                      width: 100, height: 60, fit: BoxFit.cover),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// =======================
+/// 공지 작성/수정 (멀티 이미지 업로드)
+/// =======================
 class NoticeEditorPage extends StatefulWidget {
   final String clubName;
-  final Notice? initial; // null이면 생성, 있으면 수정
+  final Notice? initial; // null = 생성, not null = 수정
   const NoticeEditorPage({super.key, required this.clubName, this.initial});
 
   bool get isEdit => initial != null;
@@ -259,7 +418,12 @@ class NoticeEditorPage extends StatefulWidget {
 class _NoticeEditorPageState extends State<NoticeEditorPage> {
   final _titleC = TextEditingController();
   final _contentC = TextEditingController();
-  final _imageUrlC = TextEditingController();
+
+  // 기존에 저장되어 있던 원격 이미지 URL
+  final List<String> _existingUrls = [];
+  // 이번에 새로 추가해서 업로드할 로컬 이미지들
+  final List<XFile> _localImages = [];
+
   bool _saving = false;
 
   DatabaseReference get _ref =>
@@ -271,15 +435,52 @@ class _NoticeEditorPageState extends State<NoticeEditorPage> {
     if (widget.isEdit) {
       _titleC.text = widget.initial!.title;
       _contentC.text = widget.initial!.content;
-      _imageUrlC.text = widget.initial!.imageUrl ?? '';
+      _existingUrls.addAll(widget.initial!.imageUrls);
     }
+  }
+
+  @override
+  void dispose() {
+    _titleC.dispose();
+    _contentC.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImages() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickMultiImage(imageQuality: 85);
+    if (picked.isEmpty) return;
+    setState(() => _localImages.addAll(picked));
+  }
+
+  Future<void> _removeExistingAt(int index) async {
+    setState(() => _existingUrls.removeAt(index));
+  }
+
+  Future<void> _removeLocalAt(int index) async {
+    setState(() => _localImages.removeAt(index));
+  }
+
+  Future<List<String>> _uploadLocalImages(String noticeId) async {
+    final storage = FirebaseStorage.instance;
+    final urls = <String>[];
+    for (final x in _localImages) {
+      final file = File(x.path);
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${x.name}';
+      final ref = storage
+          .ref()
+          .child('Club/${widget.clubName}/notices/$noticeId/images/$fileName');
+      final task = ref.putFile(file);
+      await task;
+      final url = await ref.getDownloadURL();
+      urls.add(url);
+    }
+    return urls;
   }
 
   Future<void> _save() async {
     final title = _titleC.text.trim();
     final content = _contentC.text.trim();
-    final imageUrl = _imageUrlC.text.trim();
-
     if (title.isEmpty || content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('제목과 내용을 입력해 주세요.')),
@@ -293,39 +494,44 @@ class _NoticeEditorPageState extends State<NoticeEditorPage> {
       final author = user?.email;
 
       if (widget.isEdit) {
-        // ✅ 수정
+        // 수정: 기존 noticeId 사용
         final id = widget.initial!.id;
-        final updated = {
+        final newUrls = await _uploadLocalImages(id);
+        final merged = [..._existingUrls, ...newUrls];
+
+        await _ref.child(id).update({
           'title': title,
           'content': content,
-          'imageUrl': imageUrl,
-        };
-        await _ref.child(id).update(updated);
+          'imageUrls': merged,
+        });
 
-        // 수정된 Notice를 되돌려주어 상세페이지가 즉시 갱신되도록
-        final edited = Notice(
+        if (!mounted) return;
+        Navigator.of(context).pop(Notice(
           id: id,
           title: title,
           content: content,
-          imageUrl: imageUrl.isEmpty ? null : imageUrl,
+          imageUrls: merged,
           createdAt: widget.initial!.createdAt,
           author: widget.initial!.author,
-        );
-        if (!mounted) return;
-        Navigator.of(context).pop(edited);
+        ));
       } else {
-        // ✅ 신규 작성
+        // 생성: id 먼저 확보 → 이미지 업로드 → 최종 set
         final newRef = _ref.push();
+        final id = newRef.key!;
+        final uploaded = await _uploadLocalImages(id);
+
         await newRef.set({
           'title': title,
           'content': content,
-          'imageUrl': imageUrl,
+          'imageUrls': uploaded,
           'createdAt': DateTime.now().millisecondsSinceEpoch,
           'author': author,
         });
+
         if (!mounted) return;
-        Navigator.of(context).pop(); // 새 글은 목록 스트림으로 자동 반영됨
+        Navigator.of(context).pop(); // 목록은 스트림으로 갱신됨
       }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(widget.isEdit ? '수정되었습니다.' : '등록되었습니다.')),
       );
@@ -339,12 +545,89 @@ class _NoticeEditorPageState extends State<NoticeEditorPage> {
     }
   }
 
-  @override
-  void dispose() {
-    _titleC.dispose();
-    _contentC.dispose();
-    _imageUrlC.dispose();
-    super.dispose();
+  Widget _buildImagesEditor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('이미지(여러 장 가능)'),
+        const SizedBox(height: 8),
+
+        // 기존 이미지들(원격 URL)
+        if (_existingUrls.isNotEmpty) ...[
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(_existingUrls.length, (i) {
+              final url = _existingUrls[i];
+              return Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(url, width: 96, height: 96, fit: BoxFit.cover),
+                  ),
+                  IconButton(
+                    icon: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black54, borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.all(2),
+                      child: const Icon(Icons.close, color: Colors.white, size: 16),
+                    ),
+                    onPressed: () => _removeExistingAt(i),
+                  ),
+                ],
+              );
+            }),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // 새로 추가한 로컬 이미지들
+        if (_localImages.isNotEmpty) ...[
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(_localImages.length, (i) {
+              final x = _localImages[i];
+              return Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(File(x.path),
+                        width: 96, height: 96, fit: BoxFit.cover),
+                  ),
+                  IconButton(
+                    icon: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black54, borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.all(2),
+                      child: const Icon(Icons.close, color: Colors.white, size: 16),
+                    ),
+                    onPressed: () => _removeLocalAt(i),
+                  ),
+                ],
+              );
+            }),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: _pickImages,
+              icon: const Icon(Icons.photo_library),
+              label: const Text('이미지 선택'),
+            ),
+            const SizedBox(width: 8),
+            if (_saving) const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+          ],
+        )
+      ],
+    );
   }
 
   @override
@@ -356,18 +639,20 @@ class _NoticeEditorPageState extends State<NoticeEditorPage> {
         children: [
           TextField(
             controller: _titleC,
-            decoration: const InputDecoration(labelText: '제목', border: OutlineInputBorder()),
+            decoration:
+            const InputDecoration(labelText: '제목', border: OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: _imageUrlC,
-            decoration: const InputDecoration(labelText: '이미지 URL(선택)', border: OutlineInputBorder()),
-          ),
+          _buildImagesEditor(),
           const SizedBox(height: 12),
           TextField(
             controller: _contentC,
             maxLines: 10,
-            decoration: const InputDecoration(labelText: '내용', alignLabelWithHint: true, border: OutlineInputBorder()),
+            decoration: const InputDecoration(
+              labelText: '내용',
+              alignLabelWithHint: true,
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 16),
           _saving

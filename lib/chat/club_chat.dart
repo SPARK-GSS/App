@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:gss/services/AuthService.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ClubChatPage extends StatefulWidget {
   final String clubName;
@@ -25,6 +29,9 @@ class _ClubChatPageState extends State<ClubChatPage> {
 
   // officer 캐시
   Map<String, dynamic> _officers = {};
+
+  // 이미지 업로드 진행 상태
+  bool _uploading = false;
 
   @override
   void initState() {
@@ -128,6 +135,7 @@ class _ClubChatPageState extends State<ClubChatPage> {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
 
     final msg = {
+      'type': 'text',
       'senderSid': _sid,
       'senderName': _name,
       'text': text,
@@ -146,6 +154,61 @@ class _ClubChatPageState extends State<ClubChatPage> {
     await _markReadNow();
   }
 
+  /// 이미지 선택 → Storage 업로드 → 메시지 전송
+  Future<void> _pickAndSendImage() async {
+    if (_sid == null || _name == null) return;
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      if (picked == null) return;
+
+      setState(() => _uploading = true);
+
+      final file = File(picked.path);
+      final pushKey = _messagesRef.push().key; // 메시지 키로 파일명 맞추기
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('Club/${widget.clubName}/chat/images/$pushKey.jpg');
+
+      // 업로드
+      final task = storageRef.putFile(file);
+      await task;
+
+      // 다운로드 URL
+      final url = await storageRef.getDownloadURL();
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+      final msg = {
+        'type': 'image',
+        'senderSid': _sid,
+        'senderName': _name,
+        'imageUrl': url,
+        'createdAt': nowMs,
+      };
+
+      // pushKey 재사용(정렬 안정)
+      await _messagesRef.child(pushKey!).set(msg);
+
+      // lastMessage는 “사진”
+      final lastRef = FirebaseDatabase.instance
+          .ref('Club/${widget.clubName}/chat/lastMessage');
+      await lastRef.set({'text': '사진', 'createdAt': nowMs});
+
+      if (mounted) {
+        setState(() => _uploading = false);
+      }
+      _jumpToBottom();
+      await _markReadNow();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _uploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('이미지 전송 중 오류가 발생했습니다.')),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -156,28 +219,17 @@ class _ClubChatPageState extends State<ClubChatPage> {
   bool _isMine(Map<String, dynamic> m) =>
       (m['senderSid']?.toString() ?? '') == (_sid ?? '');
 
-  // ───────── 날짜/시간 포맷 유틸 ─────────
+  // ───────── 날짜/시간 포맷 ─────────
   static const _weekdayKr = {
-    1: '월요일',
-    2: '화요일',
-    3: '수요일',
-    4: '목요일',
-    5: '금요일',
-    6: '토요일',
-    7: '일요일',
+    1: '월요일', 2: '화요일', 3: '수요일', 4: '목요일', 5: '금요일', 6: '토요일', 7: '일요일',
   };
-
-  String _formatDateHeader(DateTime d) {
-    return '${d.year}년 ${d.month}월 ${d.day}일 ${_weekdayKr[d.weekday] ?? ''}';
-    // 필요하면 locale 패키지로 더 정교하게 포맷팅 가능
-  }
-
+  String _formatDateHeader(DateTime d) =>
+      '${d.year}년 ${d.month}월 ${d.day}일 ${_weekdayKr[d.weekday] ?? ''}';
   String _formatTime(DateTime d) {
     final hh = d.hour.toString().padLeft(2, '0');
     final mm = d.minute.toString().padLeft(2, '0');
     return '$hh:$mm';
   }
-
   DateTime _ymd(DateTime d) => DateTime(d.year, d.month, d.day);
 
   @override
@@ -186,6 +238,8 @@ class _ClubChatPageState extends State<ClubChatPage> {
       appBar: AppBar(title: Text('${widget.clubName} 채팅')),
       body: Column(
         children: [
+          if (_uploading)
+            const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: ListView.builder(
               controller: _scroll,
@@ -196,12 +250,15 @@ class _ClubChatPageState extends State<ClubChatPage> {
                 final mine = _isMine(m);
                 final senderSid = (m['senderSid'] ?? '').toString();
                 final name = (m['senderName'] ?? '').toString();
-                final text = (m['text'] ?? '').toString();
+                final type = (m['type'] ?? 'text').toString();
                 final createdAt = DateTime.fromMillisecondsSinceEpoch(
                   (m['createdAt'] ?? 0) as int,
                 );
+                final role = _roleOfSid(senderSid);
+                final nameWithRole = '$name(${_roleLabel(role)})';
+                final timeText = _formatTime(createdAt);
 
-                // 날짜 구분선 표시 여부 판단
+                // 날짜 구분선
                 bool showDateDivider = false;
                 final currentYmd = _ymd(createdAt);
                 if (i == 0) {
@@ -213,62 +270,67 @@ class _ClubChatPageState extends State<ClubChatPage> {
                   if (_ymd(prevAt) != currentYmd) showDateDivider = true;
                 }
 
-                final role = _roleOfSid(senderSid);
-                final nameWithRole = '$name(${_roleLabel(role)})';
-                final timeText = _formatTime(createdAt);
+                // 말풍선: 텍스트/이미지
+                Widget bubble;
+                if (type == 'image') {
+                  final imageUrl = (m['imageUrl'] ?? '').toString();
+                  bubble = ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => Dialog(
+                            insetPadding: const EdgeInsets.all(12),
+                            child: InteractiveViewer(
+                              child: Image.network(imageUrl, fit: BoxFit.contain),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Image.network(
+                        imageUrl,
+                        width: MediaQuery.of(context).size.width * 0.55,
+                        height: MediaQuery.of(context).size.width * 0.55,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                } else {
+                  final text = (m['text'] ?? '').toString();
+                  bubble = Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: mine ? Colors.purple.shade100 : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(text, style: const TextStyle(fontSize: 15)),
+                  );
+                }
 
-                // 이름(역할) — 말풍선 밖 / 메시지 — 말풍선 안
-                // 시간 — 말풍선 옆 (내 메시지는 왼쪽, 상대 메시지는 오른쪽)
+                // 메시지 + 시간 배치
                 final messageRow = Row(
                   mainAxisAlignment:
                   mine ? MainAxisAlignment.end : MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: mine
                       ? <Widget>[
-                    // 내 메시지: 시간 먼저, 그다음 버블
                     Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: Text(
                         timeText,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                        ),
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                       ),
                     ),
-                    Flexible(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(text, style: const TextStyle(fontSize: 15)),
-                      ),
-                    ),
+                    Flexible(child: bubble),
                   ]
                       : <Widget>[
-                    // 상대 메시지: 버블 먼저, 그다음 시간
-                    Flexible(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(text, style: const TextStyle(fontSize: 15)),
-                      ),
-                    ),
+                    Flexible(child: bubble),
                     Padding(
                       padding: const EdgeInsets.only(left: 6),
                       child: Text(
                         timeText,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                        ),
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                       ),
                     ),
                   ],
@@ -283,12 +345,12 @@ class _ClubChatPageState extends State<ClubChatPage> {
                       if (showDateDivider)
                         _DateDivider(label: _formatDateHeader(currentYmd)),
                       const SizedBox(height: 4),
-                      // 이름(역할) — 말풍선 밖
+                      // 이름(역할)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: Text(
                           mine
-                              ? '$_name(${_roleLabel(_roleOfSid(_sid))})'
+                              ? '${_name ?? ''}(${_roleLabel(_roleOfSid(_sid))})'
                               : nameWithRole,
                           style: TextStyle(
                             fontSize: 12,
@@ -298,7 +360,6 @@ class _ClubChatPageState extends State<ClubChatPage> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      // 메시지 + 시간
                       messageRow,
                     ],
                   ),
@@ -313,6 +374,12 @@ class _ClubChatPageState extends State<ClubChatPage> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: Row(
                 children: [
+                  // 이미지 선택 버튼
+                  IconButton(
+                    tooltip: '사진',
+                    onPressed: _pickAndSendImage,
+                    icon: const Icon(Icons.photo),
+                  ),
                   Expanded(
                     child: TextField(
                       controller: _controller,
@@ -322,8 +389,7 @@ class _ClubChatPageState extends State<ClubChatPage> {
                         hintText: '메시지를 입력하세요',
                         border: OutlineInputBorder(),
                         isDense: true,
-                        contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       ),
                       onSubmitted: (_) => _send(),
                     ),
