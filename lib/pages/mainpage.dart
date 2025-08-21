@@ -134,53 +134,80 @@ class _ClubPageState extends State<ClubPage> {
             itemBuilder: (_, i) => ListTile(
               contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
               onTap: () {
-                print("${club[i]}");
                 Navigator.of(
                   context,
                 ).push(MaterialPageRoute(builder: (context) => Club(clubName: '${club[i]}')));
               },
               trailing: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  'assets/${club[i]}.png',
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
+                child: FutureBuilder<DataSnapshot>(
+                  future: FirebaseDatabase.instance.ref("Club/${club[i]}/info/clubimg").get(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return SizedBox(
+                        width: 100,
+                        height: 100,
+                        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      );
+                    }
+                    if (!snapshot.hasData || !snapshot.data!.exists) {
+                      return Container(
+                        width: 100,
+                        height: 100,
+                        color: Colors.grey[300],
+                        child: Icon(Icons.image_not_supported, color: Colors.grey),
+                      );
+                    }
+                    final imageUrl = snapshot.data!.value.toString();
+                    return Image.network(
+                      imageUrl,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    );
+                  },
                 ),
               ),
               leading: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-              FutureBuilder<String>(
-              future: OfficerService.printingRole(club[i]),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  );
-                } else if (snapshot.hasError) {
-                  return const Icon(Icons.error, color: Colors.red);
-                  //Text("${snapshot.error}")
-                  //const Icon(Icons.error, color: Colors.red);
-                } else {
-                  return Text(snapshot.data ?? '',style:TextStyle(fontFamily: "Pretendard", color:Color.fromRGBO(
-                      216, 162, 163, 1.0)));
-                }
-              },
-            ),
-                  Text(club[i],style:TextStyle(fontFamily: "Pretendard",fontWeight: FontWeight.w700, fontSize: 15)),
+                  FutureBuilder<String>(
+                    future: OfficerService.printingRole(club[i]),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        );
+                      } else if (snapshot.hasError) {
+                        return const Icon(Icons.error, color: Colors.red);
+                      } else {
+                        return Text(
+                          snapshot.data ?? '',
+                          style: TextStyle(
+                            fontFamily: "Pretendard",
+                            color: Color.fromRGBO(216, 162, 163, 1.0),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  Text(club[i],
+                      style: TextStyle(
+                          fontFamily: "Pretendard",
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15)),
                   Text(
                     '동아리 한 줄 소개',
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
-
             ),
           );
+
         },
       ),
     );
