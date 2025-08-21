@@ -26,7 +26,7 @@ class _homepageState extends State<homepage> {
     });
   }
 
-  final List<Widget> _pages = [UserMain(), UserSearch(), ChatListPage(), UserMy()];
+  final List<Widget> _pages = [UserMain(), ClubListPage(), ChatListPage(), UserMy()];
 
   @override
   Widget build(BuildContext context) {

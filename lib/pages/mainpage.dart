@@ -8,6 +8,7 @@ import 'package:gss/mainpages/memberlist.dart';
 import 'package:gss/mainpages/calendar.dart';
 import 'package:gss/mainpages/event.dart';
 import 'package:gss/mainpages/group.dart';
+import 'package:gss/mainpages/requestlist.dart';
 import 'package:gss/mainpages/sync_cal.dart';
 import 'package:gss/pages/newclub.dart';
 import 'package:gss/services/ApiService.dart';
@@ -224,6 +225,7 @@ class _ClubState extends State<Club> {
           const Tab(text: '공지'),
           const Tab(text: '캘린더'),
           if (showMembers) const Tab(text: '부원'),
+          if (showMembers) const Tab(text: '가입신청'),
         ];
 
         final views = <Widget>[
@@ -232,6 +234,7 @@ class _ClubState extends State<Club> {
           NoticeBoard(clubName: widget.clubName),
           CalendarApp(clubName: widget.clubName),
           if (showMembers) MemberList(clubName: widget.clubName),
+          if (showMembers) ClubRequestPage(clubName: widget.clubName),
         ];
 
         return DefaultTabController(
