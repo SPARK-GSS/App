@@ -38,14 +38,13 @@ class _homepageState extends State<homepage> {
         currentIndex: _selectedIndex,
         onTap: _navigateBottomBar,
         type: BottomNavigationBarType.fixed,
+        selectedItemColor: Color.fromRGBO(216, 162, 163, 1.0),
+        unselectedItemColor: Colors.grey,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.star,color: Color.fromRGBO(
-              172, 172, 172, 1.0)), label: 'Main'),
-          BottomNavigationBarItem(icon: Icon(Icons.search,color: Color.fromRGBO(
-              172, 172, 172, 1.0)), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline, color: Color.fromRGBO(172,172,172,1.0)), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person,color: Color.fromRGBO(
-              172, 172, 172, 1.0)), label: 'MyPage'),
+          BottomNavigationBarItem(icon: Icon(Icons.star,), label: 'Main'),
+          BottomNavigationBarItem(icon: Icon(Icons.search,), label: 'Search'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline, ), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.person,), label: 'MyPage'),
         ],
       ),
       drawer: Drawer(

@@ -238,9 +238,13 @@ class _ClubState extends State<Club> {
           length: tabs.length,
           child: Scaffold(
             appBar: AppBar(
+              backgroundColor: Colors.white,
               title: Text(widget.clubName),
               bottom: TabBar(
                 isScrollable: true,
+                labelColor: Colors.black,               // 선택된 탭 색
+                unselectedLabelColor: Colors.grey,      // 선택 안 된 탭 색
+                indicatorColor: Color.fromRGBO(216, 162, 163, 1.0),
                 tabs: tabs,
               ),
             ),

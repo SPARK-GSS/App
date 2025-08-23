@@ -235,7 +235,8 @@ class _ClubChatPageState extends State<ClubChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.clubName} 채팅')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: Text('${widget.clubName} 채팅'), backgroundColor: Colors.white,),
       body: Column(
         children: [
           if (_uploading)
@@ -301,7 +302,7 @@ class _ClubChatPageState extends State<ClubChatPage> {
                   bubble = Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: mine ? Colors.purple.shade100 : Colors.grey.shade200,
+                      color: mine ? Color.fromRGBO(216, 162, 163, 1.0) : Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(text, style: const TextStyle(fontSize: 15)),
@@ -378,26 +379,40 @@ class _ClubChatPageState extends State<ClubChatPage> {
                   IconButton(
                     tooltip: '사진',
                     onPressed: _pickAndSendImage,
-                    icon: const Icon(Icons.photo),
+                    icon: const Icon(Icons.photo, color: Color.fromRGBO(
+                        216, 162, 163, 1.0),),
                   ),
                   Expanded(
                     child: TextField(
                       controller: _controller,
                       minLines: 1,
                       maxLines: 5,
-                      decoration: const InputDecoration(
+                      cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
+                      decoration: InputDecoration(
                         hintText: '메시지를 입력하세요',
-                        border: OutlineInputBorder(),
                         isDense: true,
                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        // 기본 상태 테두리
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey, width: 1),
+                        ),
+                        // 포커스 상태 테두리
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Color.fromRGBO(
+                              119, 119, 119, 1.0), width: 1),
+                        ),
                       ),
                       onSubmitted: (_) => _send(),
                     ),
                   ),
+
                   const SizedBox(width: 8),
                   IconButton(
                     onPressed: _send,
-                    icon: const Icon(Icons.send),
+                    icon: Icon(Icons.send, color: Color.fromRGBO(
+                        216, 162, 163, 1.0),),
                   ),
                 ],
               ),

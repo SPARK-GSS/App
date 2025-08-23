@@ -42,8 +42,8 @@ class LogOutButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SizedBox(
-        width: 120,
-        height: 45,
+        width: 100,
+        height: 40,
         child: ElevatedButton(
           onPressed: () async {
             final result = await showDialog<bool>(
@@ -72,6 +72,10 @@ class LogOutButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color.fromRGBO(209, 87, 90, 1.0),
             foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)
+              )
+
           ),
         ),
       ),
