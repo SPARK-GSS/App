@@ -69,6 +69,7 @@ class NoticeBoard extends StatelessWidget {
       builder: (context, snap) {
         final canManage = snap.data ?? false;
         return Scaffold(
+          backgroundColor: Colors.white,
           body: StreamBuilder<DatabaseEvent>(
             stream: _ref.onValue,
             builder: (context, snap) {
@@ -280,7 +281,9 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
   Widget build(BuildContext context) {
     final created = DateTime.fromMillisecondsSinceEpoch(_notice.createdAt);
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(_notice.title, overflow: TextOverflow.ellipsis),
         actions: [
           if (_menuVisible)
@@ -303,9 +306,6 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          if (_notice.imageUrls.isNotEmpty)
-            _ImagesGallery(imageUrls: _notice.imageUrls),
-          const SizedBox(height: 16),
           Row(
             children: [
               if (_notice.author != null)
@@ -317,7 +317,11 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          if (_notice.imageUrls.isNotEmpty)
+            _ImagesGallery(imageUrls: _notice.imageUrls),
+          const SizedBox(height: 16),
+
           Text(
             _notice.content,
             style: const TextStyle(fontSize: 16, height: 1.5),
@@ -382,7 +386,7 @@ class _ImagesGalleryState extends State<_ImagesGallery> {
               child: Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: i == _index ? Colors.purple : Colors.transparent,
+                    color: i == _index ? Color.fromRGBO(216, 162, 163, 1.0) : Colors.transparent,
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -633,6 +637,7 @@ class _NoticeEditorPageState extends State<NoticeEditorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(title: Text(widget.isEdit ? '공지 수정' : '공지 작성')),
       body: ListView(
         padding: const EdgeInsets.all(16),

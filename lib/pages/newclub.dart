@@ -124,6 +124,7 @@ class _ClubCreatePageState extends State<ClubCreatePage> {
           .showSnackBar(SnackBar(content: Text('개설 실패: $e')));
     } finally {
       if (mounted) setState(() => _uploading = false);
+
     }
   }
 
@@ -221,6 +222,7 @@ class _ClubCreatePageState extends State<ClubCreatePage> {
                     ),
                   ),
                 ],
+
               ),
             ),
           ),
