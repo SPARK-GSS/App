@@ -47,6 +47,60 @@ Future<String> user_stuid() async {
   return studentId;
 }
 
+Future<String> user_major() async {
+  String? userEmail = user_email();
+  if (userEmail == null) {
+    throw Exception('로그인된 사용자 이메일 정보 없음');
+  }
+
+  final userSnap = await FirebaseDatabase.instance
+      .ref('Person')
+      .orderByChild('email')
+      .equalTo(userEmail)
+      .get();
+
+  if (!userSnap.exists) {
+    throw Exception('해당 이메일을 가진 사용자 정보 없음');
+  }
+
+  // userSnap.value는 {"2000111000": {"major": "cse", ...}} 와 같은 Map 형태입니다.
+  // 이 Map에서 첫 번째 엔트리의 값(value)을 가져옵니다.
+  final userData = (userSnap.value as Map).entries.first.value;
+
+  // userData는 {"major": "cse", "name": "Lee", ...} 형태의 Map이 됩니다.
+  // 이 Map에서 'major' 키로 값을 찾습니다.
+  final String major = userData['major'] as String;
+
+  return major;
+}
+Future<Map<String, dynamic>> getUserProfile() async {
+  // 1. 현재 사용자의 이메일을 가져옵니다.
+  String? userEmail = user_email();
+  if (userEmail == null) {
+    throw Exception('로그인된 사용자 이메일 정보가 없습니다.');
+  }
+
+  // 2. 이메일을 기준으로 Person 테이블에서 사용자 정보를 쿼리합니다.
+  final userSnap = await FirebaseDatabase.instance
+      .ref('Person')
+      .orderByChild('email')
+      .equalTo(userEmail)
+      .get();
+
+  // 3. 쿼리 결과가 존재하는지 확인합니다.
+  if (!userSnap.exists) {
+    throw Exception('해당 이메일을 가진 사용자 정보가 DB에 없습니다.');
+  }
+
+  // 4. 쿼리 결과에서 사용자 데이터를 추출합니다.
+  // userSnap.value는 {"학번": {"이름": "...", "학과": "..."}} 형태의 Map 입니다.
+  // .entries.first.value를 통해 내부의 상세 정보 Map을 가져옵니다.
+  final userData = (userSnap.value as Map).entries.first.value;
+
+  // 5. 타입 안정성을 위해 Map<String, dynamic>으로 변환하여 반환합니다.
+  return Map<String, dynamic>.from(userData);
+}
+
 Future<String> user_status(String clubName) async {
   final userSnap = await FirebaseDatabase.instance
       .ref('Club/$clubName/officer')
