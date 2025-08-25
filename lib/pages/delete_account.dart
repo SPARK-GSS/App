@@ -151,7 +151,8 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(title: const Text("회원 탈퇴"),backgroundColor: Colors.white,),
-      body: Padding(
+      body: Center(
+      child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center, // 세로축 중앙 정렬
@@ -166,21 +167,26 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
             TextField(
               controller:  _passwordController,
               obscureText: true,
+              cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
               decoration: const InputDecoration(
                 labelText: "비밀번호 입력",
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
                 ),
-                enabledBorder: OutlineInputBorder(     // 비활성화
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  borderSide: BorderSide(color: Colors.transparent, width: 1),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  borderSide: BorderSide(color: Colors.grey, width: 1),
                 ),
-                focusedBorder: OutlineInputBorder(     // 포커스
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  borderSide: BorderSide(color: Colors.transparent, width: 2),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  borderSide: BorderSide(color: Colors.black, width: 1),
+                ),
+                floatingLabelStyle: const TextStyle(
+                  color: Color.fromRGBO(119, 119, 119, 1.0),
+                  fontWeight: FontWeight.w600,
                 ),
                 filled: true,
-                fillColor: Color(0xFFDDDDDD),
+                fillColor: Colors.white,
               ),
             ),
             const SizedBox(height: 20),
@@ -191,12 +197,14 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color.fromRGBO(209, 87, 90, 1.0),
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text("계정 삭제"),
             ),
           ],
         ),
       ),
+    ),
     );
   }
 }

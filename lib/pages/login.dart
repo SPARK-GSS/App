@@ -115,6 +115,7 @@ class _LogInState extends State<LogIn> {
               child: TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
+                cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   icon: Icon(Icons.email, color: Color.fromRGBO(
@@ -143,6 +144,7 @@ class _LogInState extends State<LogIn> {
               child: TextField(
                 controller: passwordController,
                 obscureText: true,
+                cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   icon: Icon(Icons.password, color: Color.fromRGBO(

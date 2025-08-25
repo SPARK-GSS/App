@@ -11,54 +11,82 @@ class ChangePasswordPage extends StatefulWidget {
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final TextEditingController _currentPwController = TextEditingController();
   final TextEditingController _newPwController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = false;
+  bool _showCurrent = false;
+  bool _showNew = false;
 
   Future<void> _changePassword() async {
+    if (_isLoading) return;
     final user = _auth.currentUser;
     final email = user?.email;
     final currentPw = _currentPwController.text.trim();
     final newPw = _newPwController.text.trim();
 
-    if (email == null || currentPw.isEmpty || newPw.isEmpty) {
+    // 폼 검증
+    if (!_formKey.currentState!.validate()) return;
+
+    // 비밀번호 없는(소셜만) 계정 예외
+    if (email == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("모든 필드를 입력해주세요.")),
+        const SnackBar(content: Text("이 계정은 이메일/비밀번호 방식이 아닙니다. 비밀번호 재설정을 사용할 수 없어요.")),
       );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // 현재 비밀번호로 재인증
-      final credential = EmailAuthProvider.credential(
-        email: email,
-        password: currentPw,
-      );
+      // 1) 재인증
+      final credential = EmailAuthProvider.credential(email: email, password: currentPw);
       await user!.reauthenticateWithCredential(credential);
 
-      // 새 비밀번호로 변경
+      // 2) 새 비밀번호로 변경
       await user.updatePassword(newPw);
+
+      // 3) (옵션) 세션 갱신
+      await user.reload();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("비밀번호가 성공적으로 변경되었습니다.")),
       );
-      Navigator.of(context).pop(); // 이전 화면으로
+      Navigator.of(context).pop();
     } on FirebaseAuthException catch (e) {
       String message = "비밀번호 변경에 실패했습니다.";
-      if (e.code == 'wrong-password') {
-        message = "현재 비밀번호가 틀렸습니다.";
-      } else if (e.code == 'weak-password') {
-        message = "비밀번호는 6자 이상이어야 합니다.";
+      switch (e.code) {
+        case 'wrong-password':
+          message = "현재 비밀번호가 틀렸습니다.";
+          break;
+        case 'weak-password':
+          message = "새 비밀번호는 6자 이상이어야 합니다.";
+          break;
+        case 'too-many-requests':
+          message = "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.";
+          break;
+        case 'network-request-failed':
+          message = "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.";
+          break;
+        case 'requires-recent-login':
+          message = "보안상 최근 로그인 후에 변경할 수 있어요. 다시 로그인한 뒤 시도해주세요.";
+          break;
+        default:
+        // 디버그용: print(e.code);
+          message = "오류: ${e.code}";
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("알 수 없는 오류가 발생했습니다.")),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -69,72 +97,137 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     super.dispose();
   }
 
+  String? _validateCurrent(String? v) {
+    if (v == null || v.trim().isEmpty) return "현재 비밀번호를 입력해주세요.";
+    return null;
+  }
+
+  String? _validateNew(String? v) {
+    final s = v?.trim() ?? '';
+    if (s.isEmpty) return "새 비밀번호를 입력해주세요.";
+    if (s.length < 6) return "6자 이상으로 설정해주세요.";
+    if (s == _currentPwController.text.trim()) return "현재 비밀번호와 다르게 설정해주세요.";
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text("비밀번호 변경"),backgroundColor: Colors.white,),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // 세로축 중앙 정렬
-          crossAxisAlignment: CrossAxisAlignment.center, // 가로축 중앙 정렬
-          children: [
-            TextField(
-              controller: _currentPwController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "현재 비밀번호",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
+      appBar: AppBar(
+        title: const Text("비밀번호 변경"),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // 현재 비밀번호
+                    TextFormField(
+                      controller: _currentPwController,
+                      obscureText: !_showCurrent,
+                      validator: _validateCurrent,
+                      cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
+                      decoration: InputDecoration(
+                        labelText: "현재 비밀번호",
+                        border: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(color: Colors.grey, width: 1),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(
+                            color: Colors.black,
+                            width: 1,
+                          ),
+                        ),
+                        floatingLabelStyle: const TextStyle(
+                          color: Color.fromRGBO(119, 119, 119, 1.0),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        labelStyle: TextStyle(color: Colors.grey.shade600),
+                        filled: true,
+                        fillColor: Colors.white,
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(() => _showCurrent = !_showCurrent),
+                          icon: Icon(_showCurrent ? Icons.visibility_off : Icons.visibility),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 새 비밀번호
+                    TextFormField(
+                      controller: _newPwController,
+                      obscureText: !_showNew,
+                      validator: _validateNew,
+                      cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
+                      decoration: InputDecoration(
+                        labelText: "새 비밀번호",
+                        border: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(color: Colors.grey, width: 1),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(
+                            color: Colors.black,
+                            width: 1,
+                          ),
+                        ),
+                        floatingLabelStyle: const TextStyle(
+                          color: Color.fromRGBO(119, 119, 119, 1.0),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        labelStyle: TextStyle(color: Colors.grey.shade600),
+                        filled: true,
+                        fillColor: Colors.white,
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(() => _showNew = !_showNew),
+                          icon: Icon(_showNew ? Icons.visibility_off : Icons.visibility),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    _isLoading
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                        onPressed: _changePassword,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromRGBO(216, 162, 163, 1.0),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text("비밀번호 변경"),
+                      ),
+                  ],
                 ),
-                enabledBorder: OutlineInputBorder(     // 비활성화
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  borderSide: BorderSide(color: Colors.transparent, width: 1),
-                ),
-                focusedBorder: OutlineInputBorder(     // 포커스
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  borderSide: BorderSide(color: Colors.transparent, width: 2),
-                ),
-                filled: true,
-                fillColor: Color(0xFFDDDDDD),
               ),
             ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _currentPwController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "새 비밀번호",
-                border: OutlineInputBorder(            // 기본 테두리
-                  borderRadius: BorderRadius.all(Radius.circular(30)), // 둥근 모서리
-                ),
-                enabledBorder: OutlineInputBorder(     // 비활성화 상태
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  borderSide: BorderSide(color: Colors.transparent, width: 1),
-                ),
-                focusedBorder: OutlineInputBorder(     // 포커스 상태 (커서 들어왔을 때)
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  borderSide: BorderSide(color: Colors.transparent, width: 2),
-                ),
-                filled: true,                          // 배경색 활성화
-                fillColor: Color(0xFFDDDDDD),           // 배경색 지정
-              ),
-            ),
-            const SizedBox(height: 30),
-            _isLoading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-              onPressed: _changePassword,
-              child: const Text("비밀번호 변경"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromRGBO(216, 162, 163, 1.0),
-                foregroundColor: Colors.white,
-              ),
-            )
-          ],
+          ),
         ),
       ),
     );
   }
+
 }

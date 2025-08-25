@@ -10,6 +10,23 @@ class CalendarApp extends StatefulWidget {
 
   @override
   State<CalendarApp> createState() => _CalendarAppState();
+
+  List<DateTime> _getWeekends() {
+    final now = DateTime.now();
+    final firstDay = DateTime(now.year, now.month, 1);
+    final lastDay = DateTime(now.year, now.month + 1, 0);
+
+    List<DateTime> weekends = [];
+    for (DateTime day = firstDay;
+    day.isBefore(lastDay.add(Duration(days: 1)));
+    day = day.add(const Duration(days: 1))) {
+      if (day.weekday == DateTime.saturday || day.weekday == DateTime.sunday) {
+        weekends.add(day);
+      }
+    }
+    return weekends;
+  }
+
 }
 
 class _CalendarAppState extends State<CalendarApp> {
@@ -154,20 +171,20 @@ class _CalendarAppState extends State<CalendarApp> {
     dbRef
         .push()
         .set({
-          "StartTime": startDate.toIso8601String(),
-          "EndTime": endDate.toIso8601String(),
-          "Subject": subject,
-          "isAllDay": isAllDay,
-          "colorIndex": selectedColorIndex
-        })
+      "StartTime": startDate.toIso8601String(),
+      "EndTime": endDate.toIso8601String(),
+      "Subject": subject,
+      "isAllDay": isAllDay,
+      "colorIndex": selectedColorIndex
+    })
         .then((_) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Successfully Added')));
-        })
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Successfully Added')));
+    })
         .catchError((error) {
-          print(error);
-        });
+      print(error);
+    });
 
     events.appointments!.add(newMeeting);
     events.notifyListeners(CalendarDataSourceAction.add, meetings);
@@ -179,8 +196,10 @@ class _CalendarAppState extends State<CalendarApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        backgroundColor: Color.fromRGBO(216, 162, 163, 1.0),
+        child: Icon(Icons.add, color:Colors.white),
         onPressed: () async {
           final result = await Navigator.push(
             context,
@@ -208,10 +227,30 @@ class _CalendarAppState extends State<CalendarApp> {
         view: CalendarView.month,
         controller: controller,
         dataSource: events,
+        backgroundColor: const Color(0xFFFFFFFF),
+        headerStyle: CalendarHeaderStyle(
+          textAlign: TextAlign.center,
+          textStyle: TextStyle(
+            color: Color(0xFFD8A2A3),
+            fontWeight: FontWeight.bold,
+          ),
+          backgroundColor: Color(0xFFFFFFFF),
+        ),
         monthViewSettings: const MonthViewSettings(
           showAgenda: true,
           appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
+
+
+          monthCellStyle: MonthCellStyle(
+            backgroundColor: Color(0xFFFFFFFF),
+
+          ),
+
+          agendaStyle: AgendaStyle(
+            backgroundColor: Colors.white,
+          ),
         ),
+
         //onTap: onCalendarTapped,
         allowAppointmentResize: true,
       ),
@@ -247,15 +286,15 @@ class MeetingDataSource extends CalendarDataSource {
 
 class Meeting {
   Meeting(
-    this.eventName,
-    this.from,
-    this.to,
-    this.background,
-    this.isAllDay, {
-    this.startTimeZone = '',
-    this.endTimeZone = '',
-    this.description = '',
-  });
+      this.eventName,
+      this.from,
+      this.to,
+      this.background,
+      this.isAllDay, {
+        this.startTimeZone = '',
+        this.endTimeZone = '',
+        this.description = '',
+      });
 
   String eventName;
   DateTime from;
@@ -295,132 +334,185 @@ class _AppointmentEditorState extends State<AppointmentEditor> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-  appBar: AppBar(title: const Text('Add Appointment')),
-  body: SingleChildScrollView(  // 키보드 올라와도 스크롤 가능하도록
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: _subjectController,
-          decoration: const InputDecoration(
-            labelText: 'Subject',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _notesController,
-          decoration: const InputDecoration(
-            labelText: 'Notes',
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 3,
-        ),
-        const SizedBox(height: 20),
-
-        Text('Select Color', style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-
-        // 색상 선택 버튼
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: List.generate(colorCollection.length, (index) {
-            final color = colorCollection[index];
-            final isSelected = selectedColorIndex == index;
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedColorIndex = index;
-                });
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: isSelected
-                      ? Border.all(color: Colors.black, width: 3)
-                      : null,
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('Add Appointment'),backgroundColor: Colors.white,),
+      body: SingleChildScrollView(  // 키보드 올라와도 스크롤 가능하도록
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _subjectController,
+              cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
+              decoration: const InputDecoration(
+                labelText: 'Subject',
+                border: OutlineInputBorder(),
+                enabledBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  borderSide: BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  borderSide: BorderSide(
+                    color: Color.fromRGBO(119, 119, 119, 1.0),
+                    width: 2,
+                  ),
+                ),
+                floatingLabelStyle: const TextStyle(
+                  color: Color.fromRGBO(119, 119, 119, 1.0),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            );
-          }),
-        ),
-
-        const SizedBox(height: 20),
-
-        // 하루 종일 체크박스
-        Row(
-          children: [
-            Checkbox(
-              value: isAllDay,
-              onChanged: (bool? value) {
-                setState(() {
-                  isAllDay = value ?? false;
-                });
-              },
             ),
-            const Text('All day'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _notesController,
+              cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
+              decoration: const InputDecoration(
+                labelText: 'Notes',
+                border: OutlineInputBorder(),
+                enabledBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  borderSide: BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  borderSide: BorderSide(
+                    color: Color.fromRGBO(119, 119, 119, 1.0),
+                    width: 2,
+                  ),
+                ),
+                floatingLabelStyle: const TextStyle(
+                  color: Color.fromRGBO(119, 119, 119, 1.0),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 20),
+
+            Text('Select Color', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+
+            // 색상 선택 버튼
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: List.generate(colorCollection.length, (index) {
+                final color = colorCollection[index];
+                final isSelected = selectedColorIndex == index;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedColorIndex = index;
+                    });
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: isSelected
+                          ? Border.all(color: Colors.black, width: 3)
+                          : null,
+                    ),
+                  ),
+                );
+              }),
+            ),
+
+            const SizedBox(height: 20),
+
+            // 하루 종일 체크박스
+            Row(
+              children: [
+                Checkbox(
+                  value: isAllDay,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      isAllDay = value ?? false;
+                    });
+                  },
+                  activeColor: const Color.fromRGBO(216, 162, 163, 1.0), // 선택 시 박스 색
+                  checkColor: Colors.white,                               // 체크 표시 색
+                ),
+                const Text('All day'),
+              ],
+            ),
+
+
+            const SizedBox(height: 20),
+
+            Text('Start Date & Time', style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(
+              height: 120,
+              child: DateTimePickerExample(
+
+                onDateTimeChanged: (DateTime startDateTime) {
+                  setState(() {
+                    selectedStartDateTime = startDateTime;
+                  });
+                },
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Text('End Date & Time', style: TextStyle(fontWeight: FontWeight.bold)),
+
+            Container(
+              color: Colors.white,
+              child: SizedBox(
+                height: 120,
+                child: DateTimePickerExample(
+                  onDateTimeChanged: (DateTime endDateTime) {
+                    setState(() {
+                      selectedEndDateTime = endDateTime;
+                    });
+                  },
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            Center(
+              child: SizedBox(
+                width: 100,
+                height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  print(selectedColorIndex);
+                  final result = {
+                    'subject': _subjectController.text,
+                    'notes': _notesController.text,
+                    'startDate': selectedStartDateTime,
+                    'endDate': selectedEndDateTime,
+                    'colorIndex': selectedColorIndex,
+                    'isAllDay': isAllDay,
+                  };
+                  Navigator.pop(context, result);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromRGBO(216, 162, 163, 1.0),
+                  foregroundColor: Color.fromRGBO(255, 255, 255, 1.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 5,
+                  padding: EdgeInsets.zero,
+                ),
+                child: const Center(
+                  child: Text('Save', style: TextStyle(fontSize: 16)),
+                ),
+              ),
+              ),
+            ),
           ],
         ),
-
-        const SizedBox(height: 20),
-
-        Text('Start Date & Time', style: TextStyle(fontWeight: FontWeight.bold)),
-        SizedBox(
-          height: 120,
-          child: DateTimePickerExample(
-            onDateTimeChanged: (DateTime startDateTime) {
-              setState(() {
-                selectedStartDateTime = startDateTime;
-              });
-            },
-          ),
-        ),
-
-        const SizedBox(height: 20),
-
-        Text('End Date & Time', style: TextStyle(fontWeight: FontWeight.bold)),
-        SizedBox(
-          height: 120,
-          child: DateTimePickerExample(
-            onDateTimeChanged: (DateTime endDateTime) {
-              setState(() {
-                selectedEndDateTime = endDateTime;
-              });
-            },
-          ),
-        ),
-
-        const SizedBox(height: 30),
-
-        Center(
-          child: ElevatedButton(
-            onPressed: () {
-              print(selectedColorIndex);
-              final result = {
-                'subject': _subjectController.text,
-                'notes': _notesController.text,
-                'startDate': selectedStartDateTime,
-                'endDate': selectedEndDateTime,
-                'colorIndex': selectedColorIndex,
-                'isAllDay': isAllDay,
-              };
-              Navigator.pop(context, result);
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-              child: Text('Save', style: TextStyle(fontSize: 16)),
-            ),
-          ),
-        ),
-      ],
-    ),
-  ),
-);
+      ),
+    );
 
   }
 }

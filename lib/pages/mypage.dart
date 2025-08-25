@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gss/pages/delete_account.dart';
 import 'package:gss/pages/logout.dart';
 import 'package:gss/pages/change_password.dart';
+import 'package:gss/pages/edit_profile.dart';
 // import 'package:gss/pages/notification_settings.dart';
 // import 'package:gss/pages/friends.dart';
 // import 'package:gss/pages/theme_settings.dart';
@@ -77,7 +78,7 @@ class UserMy extends StatelessWidget {
             foregroundColor: Colors.white,
             alignment: Alignment.center,
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => ChangePasswordPage()));
+              Navigator.push(context, MaterialPageRoute(builder: (_) => EditProfilePage()));
               },
           ),
           const SizedBox(height: 30),
@@ -97,10 +98,7 @@ class UserMy extends StatelessWidget {
             context,
             title: '회원 탈퇴',
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DeleteAccountPage()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const DeleteAccountPage()),);
             },
           ),
           const SizedBox(height: 30),
@@ -142,7 +140,7 @@ class UserMy extends StatelessWidget {
 
   Widget _buildSettingButton(BuildContext context,
       {required String title, required VoidCallback onPressed,
-      Color backgroundColor = const Color.fromRGBO(221, 221, 221, 1.0),
+      Color backgroundColor = Colors.transparent,
       Color foregroundColor = const Color.fromRGBO(119, 119, 119, 1.0),
         Alignment alignment = Alignment.centerLeft,}) {
     return Padding(
@@ -153,7 +151,8 @@ class UserMy extends StatelessWidget {
           alignment: alignment,
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         onPressed: onPressed,
         child: Text(title, style: const TextStyle(fontSize: 16)),

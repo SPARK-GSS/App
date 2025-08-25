@@ -42,36 +42,47 @@ class LogOutButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SizedBox(
-        width: 120,
-        height: 45,
+        width: 100,
+        height: 40,
         child: ElevatedButton(
           onPressed: () async {
             final result = await showDialog<bool>(
               context: context,
               builder: (context) => AlertDialog(
+                backgroundColor: Colors.white,
                 title: const Text("로그아웃"),
                 content: const Text("로그아웃 하시겠습니까?"),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false), // 취소
-                    child: const Text("취소"),
+                    child: const Text("취소", style: TextStyle(
+                      fontFamily: "Pretendard",
+                      color: Colors.black,
+                    )),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context, true), // 확인
-                    child: const Text("확인"),
+                    child: const Text("확인", style: TextStyle(
+                      fontFamily: "Pretendard",
+                      color: Color.fromRGBO(209, 87, 90, 1.0),
+                    ),),
                   ),
                 ],
               ),
             );
 
             if (result == true) {
-              _logout(context); // ✅ 팝업에서 확인 누르면 로그아웃 실행
+              _logout(context);
             }
           },
           child: const Text("로그아웃"),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color.fromRGBO(209, 87, 90, 1.0),
             foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)
+              )
+
           ),
         ),
       ),

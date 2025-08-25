@@ -7,7 +7,6 @@ import 'package:gss/pages/search.dart';
 import 'package:gss/services/AuthService.dart';
 import 'package:gss/chat/chat_list.dart';
 
-//풀리퀘점
 
 class homepage extends StatefulWidget {
   const homepage({super.key});
@@ -38,17 +37,17 @@ class _homepageState extends State<homepage> {
         currentIndex: _selectedIndex,
         onTap: _navigateBottomBar,
         type: BottomNavigationBarType.fixed,
+        selectedItemColor: Color.fromRGBO(216, 162, 163, 1.0),
+        unselectedItemColor: Colors.grey,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.star,color: Color.fromRGBO(
-              172, 172, 172, 1.0)), label: 'Main'),
-          BottomNavigationBarItem(icon: Icon(Icons.search,color: Color.fromRGBO(
-              172, 172, 172, 1.0)), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline, color: Color.fromRGBO(172,172,172,1.0)), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person,color: Color.fromRGBO(
-              172, 172, 172, 1.0)), label: 'MyPage'),
+          BottomNavigationBarItem(icon: Icon(Icons.star,), label: 'Main'),
+          BottomNavigationBarItem(icon: Icon(Icons.search,), label: 'Search'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline, ), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.person,), label: 'MyPage'),
         ],
       ),
       drawer: Drawer(
+        backgroundColor: Colors.white,
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
@@ -66,23 +65,31 @@ class _homepageState extends State<homepage> {
               },
             ),
               accountEmail: Text(user_email()!),
-              currentAccountPicture: CircleAvatar(
-                backgroundImage: AssetImage('assets/google.jpg'),
-                backgroundColor: Colors.white,
+              currentAccountPicture: Builder(
+                builder: (_) {
+                  final url = FirebaseAuth.instance.currentUser?.photoURL;
+                  return CircleAvatar(
+                    backgroundColor: Colors.white,
+                    backgroundImage: (url != null && url.isNotEmpty) ? NetworkImage(url) : null,
+                    child: (url == null || url.isEmpty)
+                        ? const Icon(Icons.person, color: Colors.grey)
+                        : null,
+                  );
+                },
               ),
-              onDetailsPressed: () {
-                print("arrow is clicked");
-              },
+
+              //onDetailsPressed: () {
+              //  print("arrow is clicked");
+              //},
+
               decoration: BoxDecoration(
-                color: Colors.red[200],
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(40.0),
-                  bottomRight: Radius.circular(40.0),
-                ),
+                color: Color.fromRGBO(216, 162, 163, 1.0),
+
               ),
             ),
+
             ListTile(
-              leading: Icon(Icons.home, color: Colors.grey[850]),
+              leading: Icon(Icons.star, color: Colors.grey[850]),
               title: Text('main'),
               onTap: () {
                 print("main is clicked");
@@ -96,8 +103,8 @@ class _homepageState extends State<homepage> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.settings, color: Colors.grey[850]),
-              title: Text('setting'),
+              leading: Icon(Icons.person, color: Colors.grey[850]),
+              title: Text('mypage'),
               onTap: () {
                 print("setting is clicked");
               },

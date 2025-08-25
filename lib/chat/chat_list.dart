@@ -92,7 +92,8 @@ class _ChatListPageState extends State<ChatListPage> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: Text('채팅')),
+        backgroundColor: Colors.white,
+        appBar: AppBar(title: Text('채팅'),backgroundColor: Colors.white,),
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -102,7 +103,9 @@ class _ChatListPageState extends State<ChatListPage> {
       ..sort((a, b) => _lastCreatedAt(b).compareTo(_lastCreatedAt(a)));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('채팅')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('채팅'),
+        backgroundColor: Colors.white,),
       body: sortedClubs.isEmpty
           ? const Center(child: Text('가입한 동아리의 채팅방이 없습니다.'))
           : ListView.separated(

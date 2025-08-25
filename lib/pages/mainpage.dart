@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:gss/homepage.dart';
+import 'package:gss/mainpages/csv.dart';
 
 import 'package:gss/mainpages/noticeboard.dart';
 import 'package:gss/mainpages/memberlist.dart';
@@ -257,7 +258,8 @@ class _ClubState extends State<Club> {
 
         final views = <Widget>[
           const Center(child: Text('모임 페이지')),
-          const Center(child: Text('정산 페이지')),
+          //const Center(child: Text('정산 페이지')),
+          LedgerWidget(clubname: widget.clubName),
           NoticeBoard(clubName: widget.clubName),
           CalendarApp(clubName: widget.clubName),
           if (showMembers) MemberList(clubName: widget.clubName),
@@ -268,9 +270,13 @@ class _ClubState extends State<Club> {
           length: tabs.length,
           child: Scaffold(
             appBar: AppBar(
+              backgroundColor: Colors.white,
               title: Text(widget.clubName),
               bottom: TabBar(
                 isScrollable: true,
+                labelColor: Colors.black,               // 선택된 탭 색
+                unselectedLabelColor: Colors.grey,      // 선택 안 된 탭 색
+                indicatorColor: Color.fromRGBO(216, 162, 163, 1.0),
                 tabs: tabs,
               ),
             ),
