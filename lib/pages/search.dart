@@ -162,6 +162,7 @@ Future<void> fetchClubs() async {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           club['clubname'] ?? '',
@@ -178,7 +179,7 @@ Future<void> fetchClubs() async {
         ),
         actions: [
           TextButton(
-            child: Text('닫기'),
+            child: Text('닫기', style: TextStyle(color: Colors.black),),
             onPressed: () => Navigator.pop(dialogContext),
           ),
         ],
@@ -201,8 +202,9 @@ Future<void> fetchClubs() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200],
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: _isSearching
             ? TextField(
                 controller: _searchController,
@@ -261,9 +263,10 @@ Future<void> fetchClubs() async {
                       children: [
                         if (isJoined)
                           Text(
-                            "이미 부원",
+                            //"이미 부원",
+                            " ",
                             style: TextStyle(
-                              color: Colors.green,
+                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
                           )
@@ -273,7 +276,9 @@ Future<void> fetchClubs() async {
                             child: Text(
                               isSelected ? "지원 취소" : "지원하기",
                               style: TextStyle(
-                                color: isSelected ? Colors.red : Colors.blue,
+                                color: isSelected ? Color.fromRGBO(
+                                    209, 87, 90, 1.0) : Color.fromRGBO(
+                                    216, 162, 163, 1.0),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

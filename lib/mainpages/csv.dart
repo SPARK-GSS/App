@@ -222,36 +222,69 @@ class _LedgerWidgetState extends State<LedgerWidget> {
     return LedgerProvider(
       store: store,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('동아리 회계'),
-          actions: [
-            IconButton(
-              tooltip: 'CSV 업로드',
-              onPressed: _pickAndImportCsv,
-              icon: const Icon(Icons.upload_file),
-            ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _openAddDialog,
-          label: const Text('수기 입력'),
-          icon: const Icon(Icons.add),
-        ),
-        body: Column(
+        backgroundColor: Colors.white,
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        floatingActionButton: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const _SummaryBar(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: TextField(
-                decoration: const InputDecoration(
-                  labelText: '검색 (메모/적요/카테고리)',
-                  prefixIcon: Icon(Icons.search),
-                ),
-                onChanged: (v) => setState(() => _query = v.trim()),
-              ),
+            FloatingActionButton.extended(
+              backgroundColor: Color.fromRGBO(216, 162, 163, 1.0),
+              heroTag: 'fab-upload', // ✅ 서로 다른 heroTag 필수
+              onPressed: _openAddDialog,
+              label: Text('수기 입력', style: TextStyle(color: Colors.white),),
+              icon: const Icon(Icons.add, color: Colors.white,),
             ),
-            Expanded(child: _EntryList(query: _query)),
+            const SizedBox(height: 12),
+            FloatingActionButton.extended(
+              backgroundColor: Color.fromRGBO(216, 162, 163, 1.0),
+              heroTag: 'fab-add',
+              onPressed: _pickAndImportCsv,
+              label: Text('CSV 업로드', style: TextStyle(color: Colors.white),),
+              icon: const Icon(Icons.upload_file, color: Colors.white,),
+            ),
           ],
+        ),
+
+
+        body: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: TextField(
+                  cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
+                  decoration: InputDecoration(
+                    labelText: '검색 (메모/적요/카테고리)',
+                    prefixIcon: const Icon(Icons.search),
+
+                    border: const UnderlineInputBorder(),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+                    ),
+                    focusedBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Color.fromRGBO(119, 119, 119, 1.0), // 포커스 시 밑줄 색
+                        width: 1,
+                      ),
+                    ),
+
+                    labelStyle: TextStyle(color: Colors.grey.shade600),
+                    floatingLabelStyle: const TextStyle(
+                      color: Color.fromRGBO(119, 119, 119, 1.0),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    prefixIconColor: MaterialStateColor.resolveWith(
+                          (states) => states.contains(MaterialState.focused)
+                          ? const Color.fromRGBO(119, 119, 119, 1.0)
+                          : Colors.grey,
+                    ),
+                  ),
+                  onChanged: (v) => setState(() => _query = v.trim()),
+                ),
+              ),
+              Expanded(child: _EntryList(query: _query)),
+            ],
+
         ),
       ),
     );
@@ -540,10 +573,12 @@ class _EntryList extends StatelessWidget {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: isIncome
-                      ? Colors.green.withOpacity(0.2)
-                      : Colors.red.withOpacity(0.15),
+                      ? Color.fromRGBO(
+                      87, 103, 209, 0.5) : Color.fromRGBO(
+                      209, 87, 90, 0.5),
                   child: Icon(
                     isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                    color: Colors.black,
                   ),
                 ),
                 title: Text(
@@ -558,7 +593,9 @@ class _EntryList extends StatelessWidget {
                 trailing: Text(
                   fMoney,
                   style: TextStyle(
-                    color: isIncome ? Colors.green : Colors.red,
+                    color: isIncome ? Color.fromRGBO(
+                        87, 103, 209, 1.0) : Color.fromRGBO(
+                        209, 87, 90, 1.0),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -602,6 +639,7 @@ class _AddEntryDialogState extends State<AddEntryDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: Colors.white,
       title: const Text('거래 수기 입력'),
       content: SingleChildScrollView(
         child: Form(
@@ -622,7 +660,7 @@ class _AddEntryDialogState extends State<AddEntryDialog> {
                   const SizedBox(width: 8),
                   SegmentedButton<bool>(
                     segments: const [
-                      ButtonSegment(value: true, label: Text('수입')),
+                      ButtonSegment(value: true, label: Text('수입'),),
                       ButtonSegment(value: false, label: Text('지출')),
                     ],
                     selected: {_isIncome},
@@ -691,10 +729,12 @@ class _AddEntryDialogState extends State<AddEntryDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
+          child: Text('취소', style: TextStyle(color: Colors.black),),
         ),
         FilledButton(
+
           onPressed: () {
+
             if (_formKey.currentState!.validate()) {
               final value = double.parse(_amount.text.replaceAll(',', ''));
               final signed = _isIncome ? value : -value;
