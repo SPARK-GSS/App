@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -24,9 +25,16 @@ class _ClubCreatePageState extends State<ClubCreatePage> {
 
   final List<String> _categories = ['스포츠', '문화', '봉사', '학술', '기타'];
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
+
   Future<void> _pickImage() async {
-    final picked =
-    await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final picked = await ImagePicker()
+        .pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (picked != null) {
       setState(() {
         _selectedImage = File(picked.path);
@@ -40,13 +48,12 @@ class _ClubCreatePageState extends State<ClubCreatePage> {
     required File file,
   }) async {
     try {
-      // clubName에 공백/특수문자가 있으면 경로 문제 예방
+      // 경로 안전 처리 (공백/특수문자 치환)
       final safeName = clubName.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_');
       final fileName = 'cover_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('Club/$safeName/info/$fileName');
+      final ref =
+      FirebaseStorage.instance.ref().child('Club/$safeName/info/$fileName');
 
       final task = ref.putFile(file);
       await task;
@@ -61,6 +68,24 @@ class _ClubCreatePageState extends State<ClubCreatePage> {
     }
   }
 
+  /// 클럽 이름 중복 검사:
+  /// 1) 이미 승인된 클럽(Club/{name}) 존재?
+  /// 2) 이미 대기열(App/pendingClubs/{name})에 존재?
+  Future<String?> _validateDuplicateName(String name) async {
+    // Club/{name}
+    final approved = await FirebaseDatabase.instance.ref('Club/$name').get();
+    if (approved.exists) {
+      return '이미 존재하는 동아리명입니다.';
+    }
+    // App/pendingClubs/{name}
+    final pending =
+    await FirebaseDatabase.instance.ref('App/pendingClubs/$name').get();
+    if (pending.exists) {
+      return '이미 승인 대기 중인 동아리명입니다.';
+    }
+    return null;
+  }
+
   Future<void> _submit() async {
     final name = _nameController.text.trim();
     final desc = _descController.text.trim();
@@ -70,69 +95,60 @@ class _ClubCreatePageState extends State<ClubCreatePage> {
           .showSnackBar(const SnackBar(content: Text('모든 항목을 입력해주세요.')));
       return;
     }
+    if (_selectedImage == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('대표 이미지를 선택해주세요.')));
+      return;
+    }
 
     setState(() => _uploading = true);
 
     try {
-      leaderid = await user_stuid();
-
-      // 1) 이미지가 있으면 Storage 업로드
-      String? imageUrl;
-      if (_selectedImage != null) {
-        imageUrl = await _uploadImageAndGetUrl(
-          clubName: name,
-          file: _selectedImage!,
-        );
+      // (선택) 이름 포맷 간단 검증: 공백만/특수문자 과다 방지
+      if (name.length < 2) {
+        throw '동아리명은 2자 이상이어야 합니다.';
       }
 
-      // 2) DB 저장
-      final infoRef = FirebaseDatabase.instance.ref("Club/$name/info");
-      await infoRef.set({
-        "clubname": name,
-        "clubcat": _selectedCategory,
-        "clubdesc": desc,
-        "leaderid": leaderid,
-        "clubimg": imageUrl ?? "",
+      // 중복 검사
+      final dup = await _validateDuplicateName(name);
+      if (dup != null) {
+        throw dup;
+      }
+
+      leaderid = await user_stuid();
+      final requesterEmail =
+          FirebaseAuth.instance.currentUser?.email?.toLowerCase() ?? '';
+
+      // 이미지 업로드
+      final imageUrl =
+      await _uploadImageAndGetUrl(clubName: name, file: _selectedImage!);
+
+      // 대기열에 신청 데이터 적재 (승인/반려는 Firebase Console에서 처리)
+      final pendingRef =
+      FirebaseDatabase.instance.ref('ClubPending/$name/info');
+      await pendingRef.set({
+        'clubname': name,
+        'clubcat': _selectedCategory,
+        'clubdesc': desc,
+        'leaderid': leaderid ?? '',
+        'clubimg': imageUrl ?? '',
+        'requestedAt': DateTime.now().millisecondsSinceEpoch,
+        'requestedByEmail': requesterEmail,
+        'status': 'pending', // 표시용(관리 편의)
       });
 
-      // 3) 개설자 멤버로 추가 (members/{leaderid}: true)
-      if (leaderid != null && leaderid!.isNotEmpty) {
-        await FirebaseDatabase.instance
-            .ref("Club/$name/members/$leaderid")
-            .set(true);
-
-        // 4) 개설자의 Person/{sid}/club 에도 추가
-        final myClubsRef =
-        FirebaseDatabase.instance.ref("Person/$leaderid/club");
-        final snapshot = await myClubsRef.get();
-        if (snapshot.exists) {
-          await myClubsRef
-              .child("club${snapshot.children.length + 1}")
-              .set(name);
-        } else {
-          await myClubsRef.child("club1").set(name);
-        }
-      }
-
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('동아리를 개설했습니다.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('신청이 등록되었습니다. 관리자 승인 후 동아리 목록에 표시됩니다.')));
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('개설 실패: $e')));
+          .showSnackBar(SnackBar(content: Text('신청 실패: $e')));
     } finally {
       if (mounted) setState(() => _uploading = false);
 
     }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descController.dispose();
-    super.dispose();
   }
 
   @override
