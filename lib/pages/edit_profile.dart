@@ -175,7 +175,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final fillColor = const Color(0xFFDDDDDD);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -267,18 +266,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         enabledBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(16)),
-                          borderSide: BorderSide(color: Colors.transparent),
+                          borderSide: BorderSide(color: Colors.grey, width: 1),
                         ),
                         focusedBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(16)),
-                          borderSide: BorderSide(color: Colors.transparent, width: 2),
+                          borderSide: BorderSide(color: Colors.black, width: 1),
                         ),
                         floatingLabelStyle: const TextStyle(
                           color: Color.fromRGBO(119, 119, 119, 1.0),
                           fontWeight: FontWeight.w600,
                         ),
                         filled: true,
-                        fillColor: fillColor,
+                        fillColor: Colors.white,
                       ),
                     ),
 
@@ -297,18 +296,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         enabledBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(16)),
-                          borderSide: BorderSide(color: Colors.transparent),
+                          borderSide: BorderSide(color: Colors.grey, width: 1),
                         ),
                         focusedBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(16)),
-                          borderSide: BorderSide(color: Colors.transparent, width: 2),
+                          borderSide: BorderSide(color: Colors.black, width: 1),
                         ),
                         floatingLabelStyle: const TextStyle(
                           color: Color.fromRGBO(119, 119, 119, 1.0),
                           fontWeight: FontWeight.w600,
                         ),
                         filled: true,
-                        fillColor: fillColor,
+                        fillColor: Colors.white,
                       ),
                       onFieldSubmitted: (_) => _saveProfile(),
                     ),
