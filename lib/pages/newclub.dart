@@ -138,7 +138,8 @@ class _ClubCreatePageState extends State<ClubCreatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('동아리 개설')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('동아리 개설'), backgroundColor: Colors.white,),
       body: Column(
         children: [
           if (_uploading) const LinearProgressIndicator(minHeight: 2),
@@ -151,9 +152,24 @@ class _ClubCreatePageState extends State<ClubCreatePage> {
                   // 동아리명
                   TextField(
                     controller: _nameController,
+                    cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
                     decoration: const InputDecoration(
                       labelText: '동아리명',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(color: Colors.grey, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(color: Color.fromRGBO(119, 119, 119, 1.0), width: 2),
+                      ),
+                      floatingLabelStyle: TextStyle(
+                        color: Color.fromRGBO(119, 119, 119, 1.0),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -192,13 +208,29 @@ class _ClubCreatePageState extends State<ClubCreatePage> {
                           (c) => DropdownMenuItem(
                         value: c,
                         child: Text(c),
+
                       ),
                     )
                         .toList(),
                     onChanged: (val) => setState(() => _selectedCategory = val),
+                    dropdownColor: Colors.white,
                     decoration: const InputDecoration(
                       labelText: '동아리 분류',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(color: Colors.grey, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(color: Color.fromRGBO(119, 119, 119, 1.0), width: 2),
+                      ),
+                      floatingLabelStyle: TextStyle(
+                        color: Color.fromRGBO(119, 119, 119, 1.0),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -209,18 +241,43 @@ class _ClubCreatePageState extends State<ClubCreatePage> {
                     maxLines: 5,
                     decoration: const InputDecoration(
                       labelText: '동아리 설명',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(color: Colors.grey, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(color: Color.fromRGBO(119, 119, 119, 1.0), width: 2),
+                      ),
+                      floatingLabelStyle: TextStyle(
+                        color: Color.fromRGBO(119, 119, 119, 1.0),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
 
                   // 제출 버튼
                   Center(
+                    child: SizedBox(
+                      width: 100,
+                      height: 40,
+
                     child: ElevatedButton(
                       onPressed: _uploading ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromRGBO(216, 162, 163, 1.0),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)
+                          )
+                      ),
                       child: const Text('개설하기'),
                     ),
-                  ),
+                  ),),
                 ],
 
               ),

@@ -171,22 +171,22 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
               decoration: const InputDecoration(
                 labelText: "비밀번호 입력",
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  borderSide: BorderSide(color: Colors.transparent, width: 1),
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  borderSide: BorderSide(color: Colors.grey, width: 1),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  borderSide: BorderSide(color: Colors.transparent, width: 2),
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  borderSide: BorderSide(color: Colors.black, width: 1),
                 ),
                 floatingLabelStyle: const TextStyle(
                   color: Color.fromRGBO(119, 119, 119, 1.0),
                   fontWeight: FontWeight.w600,
                 ),
                 filled: true,
-                fillColor: Color(0xFFDDDDDD),
+                fillColor: Colors.white,
               ),
             ),
             const SizedBox(height: 20),
@@ -197,7 +197,7 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color.fromRGBO(209, 87, 90, 1.0),
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text("계정 삭제"),
             ),

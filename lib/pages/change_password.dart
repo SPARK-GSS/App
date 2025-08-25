@@ -112,7 +112,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    final inputFill = const Color(0xFFDDDDDD);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -138,21 +137,21 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       controller: _currentPwController,
                       obscureText: !_showCurrent,
                       validator: _validateCurrent,
-                      cursorColor: const Color.fromRGBO(119, 119, 119, 1.0), // 커서 색 직접 지정
+                      cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
                       decoration: InputDecoration(
                         labelText: "현재 비밀번호",
                         border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
                         ),
                         enabledBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(30)),
-                          borderSide: BorderSide(color: Colors.transparent, width: 1),
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(color: Colors.grey, width: 1),
                         ),
                         focusedBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
                           borderSide: BorderSide(
-                            color: Colors.transparent,
-                            width: 2,
+                            color: Colors.black,
+                            width: 1,
                           ),
                         ),
                         floatingLabelStyle: const TextStyle(
@@ -161,7 +160,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         ),
                         labelStyle: TextStyle(color: Colors.grey.shade600),
                         filled: true,
-                        fillColor: inputFill,
+                        fillColor: Colors.white,
                         suffixIcon: IconButton(
                           onPressed: () => setState(() => _showCurrent = !_showCurrent),
                           icon: Icon(_showCurrent ? Icons.visibility_off : Icons.visibility),
@@ -175,21 +174,21 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       controller: _newPwController,
                       obscureText: !_showNew,
                       validator: _validateNew,
-                      cursorColor: const Color.fromRGBO(119, 119, 119, 1.0), // 커서 색 직접 지정
+                      cursorColor: const Color.fromRGBO(119, 119, 119, 1.0),
                       decoration: InputDecoration(
                         labelText: "새 비밀번호",
                         border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
                         ),
                         enabledBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(30)),
-                          borderSide: BorderSide(color: Colors.transparent, width: 1),
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(color: Colors.grey, width: 1),
                         ),
                         focusedBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
                           borderSide: BorderSide(
-                            color: Colors.transparent,
-                            width: 2,
+                            color: Colors.black,
+                            width: 1,
                           ),
                         ),
                         floatingLabelStyle: const TextStyle(
@@ -198,7 +197,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         ),
                         labelStyle: TextStyle(color: Colors.grey.shade600),
                         filled: true,
-                        fillColor: inputFill,
+                        fillColor: Colors.white,
                         suffixIcon: IconButton(
                           onPressed: () => setState(() => _showNew = !_showNew),
                           icon: Icon(_showNew ? Icons.visibility_off : Icons.visibility),
@@ -210,10 +209,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
                     _isLoading
                         ? const CircularProgressIndicator()
-                        : SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
+                        : ElevatedButton(
                         onPressed: _changePassword,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color.fromRGBO(216, 162, 163, 1.0),
@@ -224,7 +220,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         ),
                         child: const Text("비밀번호 변경"),
                       ),
-                    ),
                   ],
                 ),
               ),
