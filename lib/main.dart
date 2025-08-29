@@ -36,7 +36,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
         fontFamily: "Pretendard",
-        //colorScheme: ColorScheme.fromSeed(seedColor: Colors.white)
+        //colorScheme: const ColorScheme.light(
+          //primary: Color.fromRGBO(216, 162, 163, 1.0),
+          //onPrimary: Colors.white,
+          //surface: Colors.white,
+          //onSurface: Colors.black,
+        //),
       ),
       home: homepage(),
 

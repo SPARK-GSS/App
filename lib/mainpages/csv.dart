@@ -638,42 +638,104 @@ class _AddEntryDialogState extends State<AddEntryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final borderEnabled = OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+    );
+    const borderFocused = OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.black, width: 2),
+    );
+    const floatingLabel = TextStyle(
+      color: Colors.black,
+      fontWeight: FontWeight.w600,
+    );
+
     return AlertDialog(
       backgroundColor: Colors.white,
       title: const Text('거래 수기 입력'),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _desc,
-                      decoration: const InputDecoration(labelText: '적요/설명'),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? '설명을 입력하세요' : null,
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(value: true,  label: Text('수입')),
+                    ButtonSegment(value: false, label: Text('지출')),
+                  ],
+                  selected: {_isIncome},
+                  onSelectionChanged: (s) => setState(() => _isIncome = s.first),
+                  style: ButtonStyle(
+                    padding: const WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     ),
+                    shape: const WidgetStatePropertyAll(
+                      RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                    ),
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return _isIncome
+                            ? const Color.fromRGBO(87, 103, 209, 1.0)
+                            : const Color.fromRGBO(209, 87, 90, 1.0);
+                      }
+                      return Colors.white;
+                    }),
+                    foregroundColor: WidgetStateProperty.resolveWith((states) {
+                      return states.contains(WidgetState.selected) ? Colors.white : Colors.black87;
+                    }),
+                    side: WidgetStateProperty.resolveWith((states) {
+                      final c = _isIncome
+                          ? const Color.fromRGBO(87, 103, 209, 1.0)
+                          : const Color.fromRGBO(209, 87, 90, 1.0);
+                      return BorderSide(
+                        color: states.contains(WidgetState.selected) ? c : Colors.grey.shade300,
+                        width: 1,
+                      );
+                    }),
                   ),
-                  const SizedBox(width: 8),
-                  SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(value: true, label: Text('수입'),),
-                      ButtonSegment(value: false, label: Text('지출')),
-                    ],
-                    selected: {_isIncome},
-                    onSelectionChanged: (s) =>
-                        setState(() => _isIncome = s.first),
-                  ),
-                ],
+                  showSelectedIcon: false,
+                ),
               ),
+
               const SizedBox(height: 12),
+
+              // 적요/설명
+              // 적요/설명 (금액 필드와 동일 스타일)
+              TextFormField(
+                controller: _desc,
+                cursorColor: Colors.black,
+                decoration: InputDecoration(
+                  labelText: '적요/설명',
+                  border: borderEnabled,
+                  enabledBorder: borderEnabled,
+                  focusedBorder: borderFocused,
+                  floatingLabelStyle: floatingLabel,
+                ),
+                validator: (v) =>
+                (v == null || v.trim().isEmpty) ? '설명을 입력하세요' : null,
+              ),
+
+
+              const SizedBox(height: 12),
+
+              // 금액
               TextFormField(
                 controller: _amount,
-                decoration: const InputDecoration(labelText: '금액 (숫자)'),
                 keyboardType: TextInputType.number,
+                cursorColor: Colors.black,
+                decoration: InputDecoration(
+                  labelText: '금액 (숫자)',
+                  border: borderEnabled,
+                  enabledBorder: borderEnabled,
+                  focusedBorder: borderFocused,
+                  floatingLabelStyle: floatingLabel,
+                ),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return '금액을 입력하세요';
                   final parsed = double.tryParse(v.replaceAll(',', ''));
@@ -681,31 +743,49 @@ class _AddEntryDialogState extends State<AddEntryDialog> {
                   return null;
                 },
               ),
+
               const SizedBox(height: 12),
+
+              // 카테고리 / 메모
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _category,
-                      decoration: const InputDecoration(labelText: '카테고리 (선택)'),
+                      cursorColor: Colors.black,
+                      decoration: InputDecoration(
+                        labelText: '카테고리 (선택)',
+                        border: borderEnabled,
+                        enabledBorder: borderEnabled,
+                        focusedBorder: borderFocused,
+                        floatingLabelStyle: floatingLabel,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextFormField(
                       controller: _memo,
-                      decoration: const InputDecoration(labelText: '메모 (선택)'),
+                      cursorColor: Colors.black,
+                      decoration: InputDecoration(
+                        labelText: '메모 (선택)',
+                        border: borderEnabled,
+                        enabledBorder: borderEnabled,
+                        focusedBorder: borderFocused,
+                        floatingLabelStyle: floatingLabel,
+                      ),
                     ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 12),
+
+              // 날짜
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      '날짜: ${DateFormat('yyyy.MM.dd').format(_date)}',
-                    ),
+                    child: Text('날짜: ${DateFormat('yyyy.MM.dd').format(_date)}'),
                   ),
                   TextButton.icon(
                     onPressed: () async {
@@ -714,38 +794,69 @@ class _AddEntryDialogState extends State<AddEntryDialog> {
                         initialDate: _date,
                         firstDate: DateTime(2000),
                         lastDate: DateTime(2100),
+                        builder: (context, child) {
+                          final accent = const Color.fromRGBO(216, 162, 163, 1.0);
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+
+                              colorScheme: ColorScheme.light(
+                                primary: accent,
+                                onPrimary: Colors.white,
+                                surface: Colors.white,
+                                onSurface: Colors.black,
+                              ),
+
+                              textButtonTheme: TextButtonThemeData(
+                                style: TextButton.styleFrom(foregroundColor: Colors.black),
+                              ),
+
+                              datePickerTheme: const DatePickerThemeData(
+                                //headerBackgroundColor: Color.fromRGBO(216, 162, 163, 1.0),
+                                //headerForegroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                                ),
+                                // todayForegroundColor / todayBackgroundColor
+                              ),
+                            ),
+                            child: child!,
+                          );
+                        },
                       );
                       if (picked != null) setState(() => _date = picked);
                     },
-                    icon: const Icon(Icons.calendar_today),
-                    label: const Text('날짜 선택'),
-                  ),
+                    icon: const Icon(Icons.calendar_today, color: Colors.black),
+                    label: const Text('날짜 선택', style: TextStyle(color: Colors.black)),
+                  )
+
                 ],
               ),
             ],
           ),
         ),
       ),
+
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('취소', style: TextStyle(color: Colors.black),),
+          child: const Text('취소', style: TextStyle(color: Colors.black)),
         ),
         FilledButton(
-
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color.fromRGBO(216, 162, 163, 1.0),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
           onPressed: () {
-
             if (_formKey.currentState!.validate()) {
-              final value = double.parse(_amount.text.replaceAll(',', ''));
+              final value  = double.parse(_amount.text.replaceAll(',', ''));
               final signed = _isIncome ? value : -value;
-              final entry = TransactionEntry(
+              final entry  = TransactionEntry(
                 id: UniqueKey().toString(),
                 date: _date,
                 description: _desc.text.trim(),
                 amount: double.parse(signed.toStringAsFixed(2)),
-                category: _category.text.trim().isEmpty
-                    ? null
-                    : _category.text.trim(),
+                category: _category.text.trim().isEmpty ? null : _category.text.trim(),
                 memo: _memo.text.trim().isEmpty ? null : _memo.text.trim(),
                 source: EntrySource.manual,
               );
@@ -756,5 +867,4 @@ class _AddEntryDialogState extends State<AddEntryDialog> {
         ),
       ],
     );
-  }
-}
+  }}

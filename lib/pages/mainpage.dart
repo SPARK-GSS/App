@@ -23,8 +23,7 @@ class UserMain extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: ClubPage());
-
+    return const Center(child: ClubPage());
   }
 }
 
@@ -44,74 +43,58 @@ class _ClubPageState extends State<ClubPage> {
     _clubFuture = _loadClubs();
   }
 
-  Future _onRefresh() async {
-    await Future.delayed(Duration(milliseconds: 1000));
-  }
-
   Future<List<String>> _loadClubs() async {
     try {
-      // 로그인(하드코딩)
-      // final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
-      //   email: 'test@naver.com',
-      //   password: 'testtest',
-      // );
-
-      // FirebaseAuth.instance
-      //   .authStateChanges()
-      //   .listen((User? user) {
-      //     if (user != null) {
-      //       print(user.email);
-      //     }
-      //   });
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        print(user.email);
-      } else {
-        print("no!!!!!!");
-        return [];
-      }
+      if (user == null) return [];
+
       final userSnap = await FirebaseDatabase.instance
           .ref('Person')
           .orderByChild('email')
-          .equalTo(user!.email)
+          .equalTo(user.email)
           .get();
 
       if (!userSnap.exists) throw Exception('사용자 정보 없음');
 
       final userData = (userSnap.value as Map).entries.first;
       final studentId = userData.key;
-      print(studentId);
-      // 동아리 목록 읽기
-      final clubSnap = await FirebaseDatabase.instance
-          .ref('Person/$studentId/club')
-          .get();
+
+      final clubSnap =
+      await FirebaseDatabase.instance.ref('Person/$studentId/club').get();
 
       if (!clubSnap.exists) return [];
 
       final raw = clubSnap.value as Map;
       return raw.values.map((e) => e.toString()).toList();
     } catch (e) {
-      print('에러 발생: $e');
       rethrow;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    const accent = Color.fromRGBO(216, 162, 163, 1.0);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text('내 동아리',style:TextStyle(fontFamily: "Pretendard",fontWeight: FontWeight.w700)),
+        title: const Text(
+          '내 동아리',
+          style: TextStyle(
+            fontFamily: "Pretendard",
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         centerTitle: true,
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (context) => ClubCreatePage()));
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => ClubCreatePage()),
+              );
             },
-            icon: Icon(Icons.add),
+            icon: const Icon(Icons.add),
           ),
         ],
       ),
@@ -129,86 +112,45 @@ class _ClubPageState extends State<ClubPage> {
             return const Center(child: Text('가입된 동아리가 없습니다.'));
           }
 
-          return ListView.separated(
-            itemCount: club.length,
-            separatorBuilder: (_, __) => const Divider(),
-            itemBuilder: (_, i) => ListTile(
-              contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-              onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => Club(clubName: '${club[i]}')));
-              },
-              trailing: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: FutureBuilder<DataSnapshot>(
-                  future: FirebaseDatabase.instance.ref("Club/${club[i]}/info/clubimg").get(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return SizedBox(
-                        width: 100,
-                        height: 100,
-                        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                      );
-                    }
-                    if (!snapshot.hasData || !snapshot.data!.exists) {
-                      return Container(
-                        width: 100,
-                        height: 100,
-                        color: Colors.grey[300],
-                        child: Icon(Icons.image_not_supported, color: Colors.grey),
-                      );
-                    }
-                    final imageUrl = snapshot.data!.value.toString();
-                    return Image.network(
-                      imageUrl,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                    );
-                  },
-                ),
-              ),
-              leading: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FutureBuilder<String>(
-                    future: OfficerService.printingRole(club[i]),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        );
-                      } else if (snapshot.hasError) {
-                        return const Icon(Icons.error, color: Colors.red);
-                      } else {
-                        return Text(
-                          snapshot.data ?? '',
-                          style: TextStyle(
-                            fontFamily: "Pretendard",
-                            color: Color.fromRGBO(216, 162, 163, 1.0),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                  Text(club[i],
-                      style: TextStyle(
-                          fontFamily: "Pretendard",
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15)),
-                  Text(
-                    '동아리 한 줄 소개',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-          );
 
+          final width = MediaQuery.of(context).size.width;
+          final crossAxisCount = width >= 1000
+              ? 4
+              : width >= 700
+              ? 3
+              : 2;
+
+          const spacing = 16.0;
+          const horizontalPadding = 16.0;
+          const infoHeight = 100.0; // 정보영역 고정 높이
+
+          final availableWidth =
+              width - horizontalPadding * 2 - spacing * (crossAxisCount - 1);
+          final cardWidth = availableWidth / crossAxisCount;
+          final gridMainExtent = cardWidth + infoHeight;
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(horizontalPadding),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisSpacing: spacing,
+              crossAxisSpacing: spacing,
+              mainAxisExtent: gridMainExtent,
+            ),
+            itemCount: club.length,
+            itemBuilder: (_, i) {
+              final clubName = club[i];
+              return _ClubCard(
+                clubName: clubName,
+                infoHeight: infoHeight,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => Club(clubName: clubName)),
+                  );
+                },
+              );
+            },
+          );
         },
       ),
     );
@@ -216,7 +158,7 @@ class _ClubPageState extends State<ClubPage> {
 }
 
 class Club extends StatefulWidget {
-  final String clubName; // club 이름 저장
+  final String clubName;
   const Club({super.key, required this.clubName});
 
   @override
@@ -229,7 +171,6 @@ class _ClubState extends State<Club> {
   @override
   void initState() {
     super.initState();
-    // MemberList.dart 안의 ListAuth 사용 (이미 그 파일을 import 하고 있으니 OK)
     _canSeeMembers = OfficerService.canManage(widget.clubName);
   }
 
@@ -246,7 +187,6 @@ class _ClubState extends State<Club> {
 
         final showMembers = snap.data ?? false;
 
-        // 동적으로 탭/뷰 구성
         final tabs = <Tab>[
           const Tab(text: '모임'),
           const Tab(text: '정산'),
@@ -258,7 +198,6 @@ class _ClubState extends State<Club> {
 
         final views = <Widget>[
           const Center(child: Text('모임 페이지')),
-          //const Center(child: Text('정산 페이지')),
           LedgerWidget(clubname: widget.clubName),
           NoticeBoard(clubName: widget.clubName),
           CalendarApp(clubName: widget.clubName),
@@ -274,9 +213,9 @@ class _ClubState extends State<Club> {
               title: Text(widget.clubName),
               bottom: TabBar(
                 isScrollable: true,
-                labelColor: Colors.black,               // 선택된 탭 색
-                unselectedLabelColor: Colors.grey,      // 선택 안 된 탭 색
-                indicatorColor: Color.fromRGBO(216, 162, 163, 1.0),
+                labelColor: Colors.black,
+                unselectedLabelColor: Colors.grey,
+                indicatorColor: const Color.fromRGBO(216, 162, 163, 1.0),
                 tabs: tabs,
               ),
             ),
@@ -284,6 +223,163 @@ class _ClubState extends State<Club> {
           ),
         );
       },
+    );
+  }
+}
+
+
+class _ClubCard extends StatelessWidget {
+  final String clubName;
+  final VoidCallback onTap;
+  final double infoHeight;
+
+  const _ClubCard({
+    super.key,
+    required this.clubName,
+    required this.onTap,
+    required this.infoHeight,
+  });
+
+  static const accent = Color.fromRGBO(216, 162, 163, 1.0);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            //이미지
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 2,
+                    spreadRadius: 0,
+                    offset: Offset(2, 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: FutureBuilder<DataSnapshot>(
+                    future: FirebaseDatabase.instance
+                        .ref("Club/$clubName/info/clubimg")
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        );
+                      }
+                      if (!snapshot.hasData || !snapshot.data!.exists) {
+                        return Container(
+                          color: Colors.grey[200],
+                          child: const Icon(Icons.image, color: Colors.grey, size: 48),
+                        );
+                      }
+                      final imageUrl = snapshot.data!.value.toString();
+                      return Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (ctx, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          );
+                        },
+                        errorBuilder: (ctx, err, stack) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.broken_image, color: Colors.grey),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+
+            // 동아리 정보
+            SizedBox(
+              height: infoHeight,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FutureBuilder<String>(
+                      future: OfficerService.printingRole(clubName),
+                      builder: (context, snapshot) {
+                        final roleText =
+                        (snapshot.connectionState == ConnectionState.done &&
+                            snapshot.hasData)
+                            ? snapshot.data!
+                            : '';
+                        return Text(
+                          roleText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: "Pretendard",
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: accent,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      clubName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: "Pretendard",
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Expanded(
+                      child: FutureBuilder<DataSnapshot>(
+                        future: FirebaseDatabase.instance
+                            .ref("Club/$clubName/info/clubdesc")
+                            .get(),
+                        builder: (context, s) {
+                          final desc = (s.hasData && s.data!.exists)
+                              ? s.data!.value.toString()
+                              : '동아리 한 줄 소개';
+                          return Text(
+                            desc,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                              height: 1.25,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
