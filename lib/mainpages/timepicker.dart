@@ -218,7 +218,7 @@ class _DatePickerState extends State<DatePicker> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: Colors.transparent,
       height: 50,
       child: GestureDetector(
         onTap: _showDatePicker,
@@ -226,6 +226,7 @@ class _DatePickerState extends State<DatePicker> {
           child: Text(
             DateFormat('yyyy-MM-dd').format(selectedDate),
             style: const TextStyle(fontSize: 16),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ),
