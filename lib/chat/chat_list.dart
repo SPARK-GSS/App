@@ -110,16 +110,61 @@ class _ChatListPageState extends State<ChatListPage> {
           ? const Center(child: Text('가입한 동아리의 채팅방이 없습니다.'))
           : ListView.separated(
         itemCount: sortedClubs.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, __) => const SizedBox.shrink(),
+        //separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (_, i) {
           final club = sortedClubs[i];
           final preview = _previewText(club);
           return ListTile(
-            leading: CircleAvatar(
-              radius: 20,
-              backgroundImage: AssetImage('assets/$club.png'),
-              backgroundColor: Colors.grey[200],
+            leading: FutureBuilder<DataSnapshot>(
+              future: FirebaseDatabase.instance
+                  .ref('Club/$club/info/clubimg')
+                  .get(),
+              builder: (context, snap) {
+                const double size = 40;
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return CircleAvatar(
+                    radius: size / 2,
+                    backgroundColor: Colors.grey[200],
+                    child: const SizedBox(
+                      width: 18, height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  );
+                }
+
+                // URL이 없거나 비었을 시
+                final hasUrl = snap.hasData &&
+                    snap.data!.exists &&
+                    (snap.data!.value?.toString().isNotEmpty ?? false);
+
+                if (!hasUrl) {
+                  return CircleAvatar(
+                    radius: size / 2,
+                    backgroundColor: Colors.grey[200],
+                    child: const Icon(Icons.image, color: Colors.grey),
+                  );
+                }
+
+                final url = snap.data!.value.toString();
+
+                // 에러 시
+                return ClipOval(
+                  child: Image.network(
+                    url,
+                    width: size,
+                    height: size,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => CircleAvatar(
+                      radius: size / 2,
+                      backgroundColor: Colors.grey[200],
+                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
+                  ),
+                );
+              },
             ),
+
             title: Text(
               club,
               style: const TextStyle(fontWeight: FontWeight.w600),
