@@ -164,13 +164,14 @@ class NoticeBoard extends StatelessWidget {
           ),
           floatingActionButton: canManage
               ? FloatingActionButton.extended(
+            backgroundColor: Color.fromRGBO(216, 162, 163, 1.0),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => NoticeEditorPage(clubName: clubName),
               ));
             },
-            icon: const Icon(Icons.add),
-            label: const Text('공지 작성'),
+            icon: const Icon(Icons.add, color: Colors.white,),
+            label: const Text('공지 작성', style: TextStyle(color: Colors.white),),
           )
               : null,
         );
@@ -288,6 +289,7 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
         actions: [
           if (_menuVisible)
             PopupMenuButton<String>(
+              color: Colors.white,
               onSelected: (v) {
                 if (v == 'edit') _editNotice();
                 if (v == 'delete') _deleteNotice();
@@ -296,7 +298,8 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
                 PopupMenuItem(value: 'edit', child: Text('수정')),
                 PopupMenuItem(
                   value: 'delete',
-                  child: Text('삭제', style: TextStyle(color: Colors.red)),
+                  child: Text('삭제', style: TextStyle(color: Color.fromRGBO(
+                      209, 87, 90, 1.0))),
                 ),
               ],
               icon: const Icon(Icons.more_vert),
@@ -550,11 +553,12 @@ class _NoticeEditorPageState extends State<NoticeEditorPage> {
   }
 
   Widget _buildImagesEditor() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Center(
+        child:Column(
+      //crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('이미지(여러 장 가능)'),
-        const SizedBox(height: 8),
+        //const Text('이미지(여러 장 가능)'),
+        //const SizedBox(height: 8),
 
         // 기존 이미지들(원격 URL)
         if (_existingUrls.isNotEmpty) ...[
@@ -620,55 +624,109 @@ class _NoticeEditorPageState extends State<NoticeEditorPage> {
         ],
 
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             OutlinedButton.icon(
               onPressed: _pickImages,
-              icon: const Icon(Icons.photo_library),
-              label: const Text('이미지 선택'),
+              icon: const Icon(Icons.photo_library, color: Colors.black,),
+              label: const Text('이미지 선택', style: TextStyle(color: Colors.black),),
             ),
             const SizedBox(width: 8),
             if (_saving) const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
           ],
-        )
+        ),
       ],
-    );
+    ),);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: Text(widget.isEdit ? '공지 수정' : '공지 작성')),
+      appBar: AppBar(title: Text(widget.isEdit ? '공지 수정' : '공지 작성'), backgroundColor: Colors.white,),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           TextField(
             controller: _titleC,
             decoration:
-            const InputDecoration(labelText: '제목', border: OutlineInputBorder()),
+            const InputDecoration(
+              labelText: '제목',
+              border: OutlineInputBorder(),
+              enabledBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+                borderSide: BorderSide(color: Colors.grey, width: 1),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+                borderSide: BorderSide(
+                  color: Color.fromRGBO(119, 119, 119, 1.0),
+                  width: 2,
+                ),
+              ),
+              floatingLabelStyle: const TextStyle(
+                color: Color.fromRGBO(119, 119, 119, 1.0),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           const SizedBox(height: 12),
-          _buildImagesEditor(),
-          const SizedBox(height: 12),
+
           TextField(
             controller: _contentC,
             maxLines: 10,
             decoration: const InputDecoration(
               labelText: '내용',
-              alignLabelWithHint: true,
               border: OutlineInputBorder(),
+              enabledBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+                borderSide: BorderSide(color: Colors.grey, width: 1),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+                borderSide: BorderSide(
+                  color: Color.fromRGBO(119, 119, 119, 1.0),
+                  width: 2,
+                ),
+              ),
+              floatingLabelStyle: const TextStyle(
+                color: Color.fromRGBO(119, 119, 119, 1.0),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(height: 16),
-          _saving
-              ? const Center(child: CircularProgressIndicator())
-              : ElevatedButton.icon(
+
+          _buildImagesEditor(),
+          const SizedBox(height: 20),
+
+      _saving
+          ? const Center(
+        child: CircularProgressIndicator(),
+      )
+          : Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints.tightFor(width: 100, height: 40),
+          child: ElevatedButton(
             onPressed: _save,
-            icon: const Icon(Icons.save),
-            label: Text(widget.isEdit ? '수정' : '등록'),
+            //icon: const Icon(Icons.save),
+            child: Text(widget.isEdit ? '수정' : '등록'),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(100, 40),
+              backgroundColor: Color.fromRGBO(216, 162, 163, 1.0),
+              foregroundColor: Color.fromRGBO(255, 255, 255, 1.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 5,
+              padding: EdgeInsets.zero,
+            ),
           ),
-        ],
+        ),
+      ),
+      ],
       ),
     );
   }
 }
+
