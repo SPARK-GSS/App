@@ -18,6 +18,8 @@ import 'package:gss/services/DBservice.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:collection';
 
+import 'package:gss/pages/bungae.dart';
+
 class UserMain extends StatelessWidget {
   const UserMain({super.key});
 
@@ -197,7 +199,7 @@ class _ClubState extends State<Club> {
         ];
 
         final views = <Widget>[
-          const Center(child: Text('모임 페이지')),
+          EventBoard(clubName: widget.clubName),
           LedgerWidget(clubname: widget.clubName),
           NoticeBoard(clubName: widget.clubName),
           CalendarApp(clubName: widget.clubName),
