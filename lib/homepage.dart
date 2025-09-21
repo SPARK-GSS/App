@@ -21,7 +21,7 @@ class _homepageState extends State<homepage> {
   }
 
   final List<Widget> _pages = [
-    UserMain(),
+    //UserMain(),
     UserSearch(),
     UserMy(),
   ];

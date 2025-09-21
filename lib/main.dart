@@ -8,7 +8,7 @@ void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
-      name: "gss",
+      //name: "gss",
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
