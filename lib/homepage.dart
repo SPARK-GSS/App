@@ -33,7 +33,7 @@ class _homepageState extends State<homepage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text('GSS'),
+        title: const Text('c:lover'),
         toolbarHeight: 40,
       ),
       body: _pages[_selectedIndex],
