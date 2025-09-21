@@ -13,6 +13,51 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:gss/pages/login.dart';
 
+class MyProfileAvatar extends StatelessWidget {
+  final double radius;
+  const MyProfileAvatar({super.key, this.radius = 42});
+
+  @override
+  Widget build(BuildContext context) {
+    final email = FirebaseAuth.instance.currentUser!.email!;
+
+    final stream = FirebaseDatabase.instance
+        .ref('Person')
+        .orderByChild('email')
+        .equalTo(email)
+        .limitToFirst(1)
+        .onValue;
+
+    return StreamBuilder<DatabaseEvent>(
+      stream: stream,
+      builder: (context, snap) {
+        String? photoUrl;
+
+        if (snap.hasData && snap.data!.snapshot.exists) {
+          final first = snap.data!.snapshot.children.first;
+          final v = first.child('photoUrl').value as String?;
+          if (v != null && v.trim().isNotEmpty) photoUrl = v.trim();
+        }
+
+        return CircleAvatar(
+          radius: radius,
+          backgroundColor: const Color(0xFFEDEDED),
+          child: (photoUrl != null)
+              ? ClipOval(
+            child: Image.network(
+              photoUrl!,
+              width: radius * 2,
+              height: radius * 2,
+              fit: BoxFit.cover, // 꽉 채워서 자름
+            ),
+          )
+              : const Icon(Icons.person, size: 42, color: Colors.grey),
+        );
+      },
+    );
+  }
+}
+
 // 이메일 가져오기
 String? _userEmail() {
   final user = FirebaseAuth.instance.currentUser;
@@ -39,6 +84,7 @@ Future<String?> _userName() async {
 }
 
 
+
 class UserMy extends StatelessWidget {
   const UserMy({super.key});
 
@@ -55,6 +101,8 @@ class UserMy extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          MyProfileAvatar(),
+          const SizedBox(height: 5),
           FutureBuilder<String?> (
             future: _userName(),
             builder: (context, snapshot) {

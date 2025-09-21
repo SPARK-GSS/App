@@ -136,6 +136,51 @@ class _MemberListState extends State<MemberList> {
     _initLoad();
   }
 
+  Future<void> _openRoleMenu(BuildContext ctx, String sid, String role) async {
+    final actions = _menuFor(sid, role);
+    if (actions.isEmpty) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        const SnackBar(content: Text('사용 가능한 작업이 없습니다.')),
+      );
+      return;
+    }
+
+    final selectedKey = await showModalBottomSheet<String>(
+      context: ctx,
+      showDragHandle: true,
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: actions.map((a) {
+            return ListTile(
+              leading: Icon(a.icon),
+              title: Text(a.label),
+              onTap: () => Navigator.pop(sheetCtx, a.key),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+
+    switch (selectedKey) {
+      case 'appoint':
+        await _appointManager(sid);
+        break;
+      case 'revoke':
+        await _revokeManager(sid);
+        break;
+      case 'delegate_pres':
+        await _delegatePresident(sid);
+        break;
+      case 'delegate_vice':
+        await _delegateVice(sid);
+        break;
+      default:
+        break;
+    }
+  }
+
+
   Future<void> _initLoad() async {
     try {
       _mySid = await ListAuth.currentStudentId();
@@ -197,13 +242,13 @@ class _MemberListState extends State<MemberList> {
   Color _roleColor(String role) {
     switch (role) {
       case 'president':
-        return Colors.orange.shade100;
+        return Color.fromRGBO(216, 162, 163, 1.0);
       case 'vice':
-        return Colors.blue.shade100;
+        return Color.fromRGBO(201, 162, 216, 1.0);
       case 'manager':
-        return Colors.green.shade100;
+        return Color.fromRGBO(162, 216, 163, 1.0);
       default:
-        return Colors.grey.shade200;
+        return Colors.white;
     }
   }
 
@@ -399,6 +444,7 @@ class _MemberListState extends State<MemberList> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: _memberSids.isEmpty
           ? const Center(child: Text('등록된 부원이 없습니다.'))
           : ListView.separated(
@@ -417,55 +463,18 @@ class _MemberListState extends State<MemberList> {
                   subtitle: Text('학과: $major   전화: $contact'),
                   trailing: Builder(
                     builder: (context) {
-                      final actions = _menuFor(sid, role);
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Chip(
-                            label: Text(_roleLabel(role)),
-                            backgroundColor: _roleColor(role),
-                          ),
-                          if (actions.isNotEmpty) ...[
-                            const SizedBox(width: 4),
-                            PopupMenuButton<_MenuAction>(
-                              icon: const Icon(Icons.more_horiz), // 미트볼 아이콘
-                              tooltip: '작업',
-                              itemBuilder: (_) => actions
-                                  .map(
-                                    (a) => PopupMenuItem<_MenuAction>(
-                                      value: a,
-                                      child: Row(
-                                        children: [
-                                          Icon(a.icon, size: 18),
-                                          const SizedBox(width: 8),
-                                          Text(a.label),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                              onSelected: (a) async {
-                                switch (a.key) {
-                                  case 'appoint':
-                                    await _appointManager(sid);
-                                    break;
-                                  case 'revoke':
-                                    await _revokeManager(sid);
-                                    break;
-                                  case 'delegate_pres':
-                                    await _delegatePresident(sid);
-                                    break;
-                                  case 'delegate_vice':
-                                    await _delegateVice(sid);
-                                    break;
-                                }
-                              },
-                            ),
-                          ],
-                        ],
+                      final role = _roleBySid[sid] ?? 'none';
+                      return ActionChip(
+                        label: Text(_roleLabel(role)),
+                        onPressed: () => _openRoleMenu(context, sid, role),
+                        // Flutter M3에서는 WidgetStateProperty로 감싸줘야 에러 안 남
+                        backgroundColor: _roleColor(role),
+                        // 선택/비활성 등 상태별로 바꾸고 싶으면 resolveWith 사용
+                        // backgroundColor: WidgetStateProperty.resolveWith((states) { ... })
                       );
                     },
                   ),
+
                 );
               },
             ),

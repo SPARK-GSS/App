@@ -86,7 +86,8 @@ class _ClubRequestPageState extends State<ClubRequestPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("${widget.clubName} 지원자 목록")),
+      backgroundColor: Colors.white,
+      //appBar: AppBar(title: Text("${widget.clubName} 지원자 목록"), backgroundColor: Colors.white,),
       body: requests.isEmpty
           ? const Center(child: Text("지원자가 없습니다."))
           : ListView.builder(
@@ -94,6 +95,7 @@ class _ClubRequestPageState extends State<ClubRequestPage> {
               itemBuilder: (context, index) {
                 final req = requests[index];
                 return Card(
+                  color: Colors.white,
                   margin: const EdgeInsets.all(8),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -116,7 +118,8 @@ class _ClubRequestPageState extends State<ClubRequestPage> {
                               onPressed: () =>
                                   approveRequest(req["studentId"]!),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
+                                backgroundColor: Color.fromRGBO(
+                                    87, 103, 209, 1.0),
                                 foregroundColor: Colors.white,
                               ),
                               child: const Text("승인"),
@@ -126,7 +129,8 @@ class _ClubRequestPageState extends State<ClubRequestPage> {
                               onPressed: () =>
                                   rejectRequest(req["studentId"]!),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
+                                backgroundColor: Color.fromRGBO(
+                                    209, 87, 90, 1.0),
                                 foregroundColor: Colors.white,
                               ),
                               child: const Text("거절"),
