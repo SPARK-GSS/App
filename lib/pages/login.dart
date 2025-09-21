@@ -35,7 +35,7 @@ class _LoginState extends State<Login> {
             //Center(child: Text('GSS')),
             Center(
               child: Text(
-                'Welcome to GSS!',
+                'Welcome to c:lover!',
                 style: TextStyle(
                   fontSize: 30,
                   color: Color.fromRGBO(0, 0, 0, 1.0),
