@@ -35,9 +35,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+
       theme: ThemeData(
 
-        //fontFamily: "Pretendard",
+        fontFamily: "Pretendard",
 
         // 컬러 스킴 커스텀
         // colorScheme: const ColorScheme.light(
