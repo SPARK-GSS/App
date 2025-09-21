@@ -3,7 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:gss/homepage.dart';
 import 'package:gss/mainpages/csv.dart';
-
+import 'package:share_plus/share_plus.dart';
 import 'package:gss/mainpages/noticeboard.dart';
 import 'package:gss/mainpages/memberlist.dart';
 import 'package:gss/mainpages/calendar.dart';
@@ -15,6 +15,7 @@ import 'package:gss/pages/newclub.dart';
 import 'package:gss/services/ApiService.dart';
 import 'package:gss/services/AuthService.dart';
 import 'package:gss/services/DBservice.dart';
+import 'package:gss/services/invite_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:collection';
 
@@ -213,6 +214,22 @@ class _ClubState extends State<Club> {
             appBar: AppBar(
               backgroundColor: Colors.white,
               title: Text(widget.clubName),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.link),
+                  onPressed: () async {
+                    try {
+                      final url = await InviteService.createInviteLink(widget.clubName);
+                      if (!mounted) return;
+                      await Share.share('GSS "${widget.clubName}" 초대 링크\n$url');
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text('링크 생성 실패: $e')));
+                    }
+                  },
+                ),
+              ],
               bottom: TabBar(
                 isScrollable: true,
                 labelColor: Colors.black,

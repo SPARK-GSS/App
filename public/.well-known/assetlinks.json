@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example.gss",
+      "sha256_cert_fingerprints": [
+        "07:40:2d:6c:2f:23:15:75:bd:ed:68:15:6a:76:6c:95:7b:6f:ab:41:a8:04:42:53:90:c1:03:6b:1a:bf:62:55"
+      ]
+    }
+  }
+]
